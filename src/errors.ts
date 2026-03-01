@@ -22,7 +22,9 @@ export class DecryptionError extends CryptoError {
  * Thrown when an invalid threshold is provided for M-of-N operations.
  */
 export class InvalidThresholdError extends CryptoError {
-  constructor(message = 'Invalid threshold: must be between 1 and the number of shares/passwords.') {
+  constructor(
+    message = 'Invalid threshold: must be between 1 and the number of shares/passwords.',
+  ) {
     super(message);
   }
 }
@@ -58,7 +60,9 @@ export class ProviderNotFoundError extends CryptoError {
  * Thrown when the environment does not support secure cryptographic operations.
  */
 export class SecureContextError extends CryptoError {
-  constructor(message = 'Web Crypto API is only available in Secure Contexts (HTTPS or localhost).') {
+  constructor(
+    message = 'Web Crypto API is only available in Secure Contexts (HTTPS or localhost).',
+  ) {
     super(message);
   }
 }

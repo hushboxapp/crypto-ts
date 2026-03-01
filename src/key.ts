@@ -1,8 +1,14 @@
-import { InvalidKeyError, InvalidThresholdError, InsufficientSharesError, EmptyPasswordsError, EmptyKeyError, UnsupportedVersionError } from './errors';
-import { Argon2Provider } from './hashing/argon2';
+import {
+  InvalidKeyError,
+  InvalidThresholdError,
+  InsufficientSharesError,
+  EmptyPasswordsError,
+  EmptyKeyError,
+  UnsupportedVersionError,
+} from './errors';
 import { SharingFactory } from './sharing/sharing';
 import { EncryptionFactory } from './encryption/encryption';
-import { HashingProvider, HashingFactory } from './hashing/hashing';
+import { HashingFactory } from './hashing/hashing';
 import { EncodingFactory } from './encoding/encoding';
 import { RandomnessFactory } from './randomness/randomness';
 
@@ -35,14 +41,14 @@ export class Key {
   }
 
   async encrypt(
-    passwords: string[], 
-    threshold: number, 
+    passwords: string[],
+    threshold: number,
     options: {
       hashingProvider?: string;
       sharingProvider?: string;
       encryptionProvider?: string;
       randomnessProvider?: string;
-    } = {}
+    } = {},
   ): Promise<EncryptedKey> {
     if (passwords.length === 0) {
       throw new EmptyPasswordsError();
@@ -69,21 +75,16 @@ export class Key {
       const iv = randomness.generate(KEY_PROTECTOR_IV_LENGTH);
       const passwordKey = await hashing.derive(passwords[i], salt);
       const ciphertext = await encryption.encrypt(shares[i], passwordKey, iv);
-      
+
       protectors.push({
         salt,
         iv,
         ciphertext,
-        hashingAlgorithm: hashing.name
+        hashingAlgorithm: hashing.name,
       });
     }
 
-    return new EncryptedKey(
-      protectors, 
-      threshold, 
-      encryption.name, 
-      sharing.name
-    );
+    return new EncryptedKey(protectors, threshold, encryption.name, sharing.name);
   }
 }
 
@@ -92,12 +93,10 @@ export class EncryptedKey {
     public readonly protectors: KeyProtector[],
     public readonly threshold: number,
     public readonly encryptionProvider: string,
-    public readonly sharingProvider: string
+    public readonly sharingProvider: string,
   ) {}
 
-  async decrypt(
-    passwords: string[] 
-  ): Promise<Key> {
+  async decrypt(passwords: string[]): Promise<Key> {
     if (passwords.length === 0) {
       throw new EmptyPasswordsError();
     }
@@ -114,7 +113,7 @@ export class EncryptedKey {
           const share = await encryption.decrypt(protector.ciphertext, passwordKey, protector.iv);
           shares.push(share);
           break; // This password unlocked a share
-        } catch (e) {
+        } catch {
           continue; // Try next protector
         }
       }
@@ -136,12 +135,12 @@ export class EncryptedKey {
       t: this.threshold,
       e: this.encryptionProvider,
       s: this.sharingProvider,
-      p: this.protectors.map(p => ({
+      p: this.protectors.map((p) => ({
         s: Buffer.from(p.salt).toString('base64'),
         i: Buffer.from(p.iv).toString('base64'),
         c: Buffer.from(p.ciphertext).toString('base64'),
-        a: p.hashingAlgorithm
-      }))
+        a: p.hashingAlgorithm,
+      })),
     };
     return encoding.btoa(JSON.stringify(data));
   }
@@ -154,12 +153,15 @@ export class EncryptedKey {
       throw new UnsupportedVersionError(data.v, KEY_VERSION);
     }
 
-    const protectors: KeyProtector[] = data.p.map((p: any) => ({
-      salt: new Uint8Array(Uint8Array.from(Buffer.from(p.s, 'base64'))),
-      iv: new Uint8Array(Uint8Array.from(Buffer.from(p.i, 'base64'))),
-      ciphertext: new Uint8Array(Uint8Array.from(Buffer.from(p.c, 'base64'))),
-      hashingAlgorithm: p.a
-    }));
+    const protectors: KeyProtector[] = data.p.map(
+      (p: { s: string; i: string; c: string; a: string }) => ({
+        salt: new Uint8Array(Uint8Array.from(Buffer.from(p.s, 'base64'))),
+        iv: new Uint8Array(Uint8Array.from(Buffer.from(p.i, 'base64'))),
+        ciphertext: new Uint8Array(Uint8Array.from(Buffer.from(p.c, 'base64'))),
+        hashingAlgorithm: p.a,
+      }),
+    );
+
     return new EncryptedKey(protectors, data.t, data.e, data.s);
   }
 }

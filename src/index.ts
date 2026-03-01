@@ -33,7 +33,7 @@ export async function combineShares(shares: Uint8Array[]): Promise<Uint8Array> {
 
 export async function encryptWithDEK(
   data: Uint8Array,
-  kek: Uint8Array
+  kek: Uint8Array,
 ): Promise<{
   ciphertext: Uint8Array;
   wrappedDEK: Uint8Array;
@@ -63,7 +63,7 @@ export async function decryptWithDEK(
   wrappedDEK: Uint8Array,
   kek: Uint8Array,
   dataIV: Uint8Array,
-  dekIV: Uint8Array
+  dekIV: Uint8Array,
 ): Promise<Uint8Array> {
   const encryption = EncryptionFactory.getProvider('aes-gcm');
 

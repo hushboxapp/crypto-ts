@@ -4,7 +4,11 @@ import { SecureContextError } from '../errors';
 export class NativeProvider implements RandomnessProvider {
   readonly name = 'native';
   generate(length: number): Uint8Array {
-    if (typeof globalThis !== 'undefined' && 'isSecureContext' in globalThis && !globalThis.isSecureContext) {
+    if (
+      typeof globalThis !== 'undefined' &&
+      'isSecureContext' in globalThis &&
+      !globalThis.isSecureContext
+    ) {
       throw new SecureContextError();
     }
 

@@ -14,7 +14,8 @@ self.onmessage = async (e: MessageEvent) => {
     });
     // @ts-ignore
     self.postMessage({ id, result }, [result.buffer]);
-  } catch (error: any) {
-    self.postMessage({ id, error: error.message });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    self.postMessage({ id, error: message });
   }
 };

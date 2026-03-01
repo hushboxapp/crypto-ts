@@ -7,7 +7,10 @@ import { Argon2Options, DEFAULT_ARGON2_OPTIONS } from './argon2';
 export class Argon2WorkerProvider implements HashingProvider {
   readonly name = 'argon2id-worker';
   private nextId = 0;
-  private pendingRequests = new Map<number, { resolve: Function; reject: ErrorConstructor }>();
+  private pendingRequests = new Map<
+    number,
+    { resolve: (value: Uint8Array) => void; reject: (reason: Error) => void }
+  >();
   private worker: Worker;
 
   /**
@@ -17,7 +20,7 @@ export class Argon2WorkerProvider implements HashingProvider {
    */
   constructor(
     private workerFactory: () => Worker,
-    private options: Partial<Argon2Options> = {}
+    private options: Partial<Argon2Options> = {},
   ) {
     this.worker = this.workerFactory();
     this.worker.onmessage = this.handleMessage.bind(this);
@@ -34,7 +37,7 @@ export class Argon2WorkerProvider implements HashingProvider {
         id,
         password,
         salt,
-        options: params
+        options: params,
       });
     });
   }
@@ -50,7 +53,7 @@ export class Argon2WorkerProvider implements HashingProvider {
     if (request) {
       this.pendingRequests.delete(id);
       if (error) {
-        request.reject(new Error(error) as any);
+        request.reject(new Error(error));
       } else {
         request.resolve(result);
       }

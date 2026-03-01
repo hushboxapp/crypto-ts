@@ -13,7 +13,7 @@ const DEFAULT_ARGON2_OPTIONS = {
   parallelism: 1,
   iterations: 2,
   memorySize: 65536, // 64 MB
-  hashLength: 32,    // 256 bits
+  hashLength: 32, // 256 bits
 };
 
 /**
@@ -22,10 +22,7 @@ const DEFAULT_ARGON2_OPTIONS = {
  * @param options Argon2id parameters and salt.
  * @returns The derived key as a Uint8Array.
  */
-export async function deriveKey(
-  password: string,
-  options: Argon2Options
-): Promise<Uint8Array> {
+export async function deriveKey(password: string, options: Argon2Options): Promise<Uint8Array> {
   const params = {
     ...DEFAULT_ARGON2_OPTIONS,
     ...options,
