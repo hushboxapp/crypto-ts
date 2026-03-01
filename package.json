@@ -1,6 +1,6 @@
 {
   "name": "@vaultick/crypto",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A browser-compatible TypeScript library for document encryption with multi-password support.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
