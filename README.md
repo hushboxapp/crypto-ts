@@ -1,6 +1,7 @@
 # 🔐 @vaultick/crypto
 
 [![Build & Tests](https://github.com/vaultick/crypto-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/vaultick/crypto-ts/actions/workflows/ci.yml)
+[![NPM Version](https://img.shields.io/npm/v/@vaultick/crypto.svg)](https://www.npmjs.com/package/@vaultick/crypto)
 [![Release Status](https://github.com/vaultick/crypto-ts/actions/workflows/release-please.yml/badge.svg)](https://github.com/vaultick/crypto-ts/actions/workflows/release-please.yml)
 
 A browser-compatible TypeScript library for advanced cryptographic operations.
