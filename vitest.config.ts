@@ -14,5 +14,11 @@ export default defineConfig({
       ],
     },
     include: ['tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.worker.ts', 'src/index.ts'],
+    },
   },
 });
