@@ -1,11 +1,18 @@
 import { split, combine } from 'shamir-secret-sharing';
 import { SharingProvider, SharingFactory } from './sharing';
+import { InvalidThresholdError, InvalidShareCountError, EmptyDataError } from '../errors';
 
 export class ShamirProvider implements SharingProvider {
   readonly name = 'shamir';
   async split(secret: Uint8Array, n: number, t: number): Promise<Uint8Array[]> {
-    if (t > n) {
-      throw new Error('Threshold cannot be greater than the number of shares');
+    if (secret.length === 0) {
+      throw new EmptyDataError('Secret material cannot be empty.');
+    }
+    if (n < 1) {
+      throw new InvalidShareCountError();
+    }
+    if (t > n || t < 1) {
+      throw new InvalidThresholdError();
     }
     return await split(secret, n, t);
   }

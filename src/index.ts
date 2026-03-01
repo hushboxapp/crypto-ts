@@ -12,6 +12,7 @@ export * from './sharing/shamir';
 export * from './key';
 export * from './document';
 export * from './factory';
+export * from './errors';
 
 // High-level helpers for backward compatibility
 import { RandomnessFactory } from './randomness/randomness';

@@ -2,6 +2,7 @@ import { EncryptionFactory } from './encryption/encryption';
 import { Key } from './key';
 import { EncodingFactory } from './encoding/encoding';
 import { RandomnessFactory } from './randomness/randomness';
+import { EmptyDataError } from './errors';
 
 export interface DocumentMetadata {
   iv: Uint8Array;
@@ -22,6 +23,9 @@ export class Document {
       randomnessProvider?: string;
     } = {}
   ): Promise<Document> {
+    if (data.length === 0) {
+      throw new EmptyDataError();
+    }
     const encryption = EncryptionFactory.getProvider(options.encryptionProvider || 'aes-gcm');
     const randomness = RandomnessFactory.getProvider(options.randomnessProvider || 'native');
     

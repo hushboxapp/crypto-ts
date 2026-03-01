@@ -1,3 +1,4 @@
+import { InvalidKeyError, InvalidThresholdError, InsufficientSharesError, EmptyPasswordsError, EmptyKeyError } from './errors';
 import { Argon2Provider } from './hashing/argon2';
 import { SharingFactory } from './sharing/sharing';
 import { EncryptionFactory } from './encryption/encryption';
@@ -14,8 +15,11 @@ export interface KeyProtector {
 
 export class Key {
   constructor(public readonly material: Uint8Array) {
+    if (material.length === 0) {
+      throw new EmptyKeyError();
+    }
     if (material.length !== 32) {
-      throw new Error('Key must be 256 bits (32 bytes)');
+      throw new InvalidKeyError();
     }
   }
 
@@ -34,8 +38,11 @@ export class Key {
       randomnessProvider?: string;
     } = {}
   ): Promise<EncryptedKey> {
+    if (passwords.length === 0) {
+      throw new EmptyPasswordsError();
+    }
     const n = passwords.length;
-    if (threshold > n) throw new Error('Threshold cannot be greater than number of passwords');
+    if (threshold > n || threshold < 1) throw new InvalidThresholdError();
 
     const sharing = SharingFactory.getProvider(options.sharingProvider || 'shamir');
     const encryption = EncryptionFactory.getProvider(options.encryptionProvider || 'aes-gcm');
@@ -85,6 +92,9 @@ export class EncryptedKey {
   async decrypt(
     passwords: string[] 
   ): Promise<Key> {
+    if (passwords.length === 0) {
+      throw new EmptyPasswordsError();
+    }
     const shares: Uint8Array[] = [];
     const encryption = EncryptionFactory.getProvider(this.encryptionProvider);
     const sharing = SharingFactory.getProvider(this.sharingProvider);
@@ -106,7 +116,7 @@ export class EncryptedKey {
     }
 
     if (shares.length < this.threshold) {
-      throw new Error(`Insufficient correct passwords: unlocked ${shares.length}/${this.threshold} required shares.`);
+      throw new InsufficientSharesError(shares.length, this.threshold);
     }
 
     const material = this.threshold === 1 ? shares[0] : await sharing.combine(shares);

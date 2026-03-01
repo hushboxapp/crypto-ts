@@ -5,4 +5,4 @@ export interface HashingProvider extends NamedProvider {
   getParams(): Record<string, unknown>;
 }
 
-export const HashingFactory = new Factory<HashingProvider>();
+export const HashingFactory = new Factory<HashingProvider>('Hashing');

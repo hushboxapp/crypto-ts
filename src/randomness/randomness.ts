@@ -4,4 +4,4 @@ export interface RandomnessProvider extends NamedProvider {
   generate(length: number): Uint8Array;
 }
 
-export const RandomnessFactory = new Factory<RandomnessProvider>();
+export const RandomnessFactory = new Factory<RandomnessProvider>('Randomness');

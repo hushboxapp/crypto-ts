@@ -5,4 +5,4 @@ export interface EncryptionProvider extends NamedProvider {
   decrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array): Promise<Uint8Array>;
 }
 
-export const EncryptionFactory = new Factory<EncryptionProvider>();
+export const EncryptionFactory = new Factory<EncryptionProvider>('Encryption');

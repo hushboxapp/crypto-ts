@@ -1,10 +1,11 @@
 import { RandomnessProvider, RandomnessFactory } from './randomness';
+import { SecureContextError } from '../errors';
 
 export class NativeProvider implements RandomnessProvider {
   readonly name = 'native';
   generate(length: number): Uint8Array {
     if (typeof globalThis !== 'undefined' && 'isSecureContext' in globalThis && !globalThis.isSecureContext) {
-      throw new Error('Web Crypto API is only available in Secure Contexts (HTTPS or localhost).');
+      throw new SecureContextError();
     }
 
     const bytes = new Uint8Array(length);

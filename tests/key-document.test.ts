@@ -50,6 +50,6 @@ describe('Key & Document Refactored Architecture', () => {
     expect(new TextDecoder().decode(decrypted)).toBe('M-of-N secret');
 
     // Fail with only 1 password
-    await expect(importedEK.decrypt(['p2'])).rejects.toThrow(/Insufficient correct passwords/);
+    await expect(importedEK.decrypt(['p2'])).rejects.toThrow(/Insufficient correct components/);
   });
 });

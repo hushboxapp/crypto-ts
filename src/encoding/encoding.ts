@@ -5,4 +5,4 @@ export interface EncodingProvider extends NamedProvider {
   atob(b64: string): string;
 }
 
-export const EncodingFactory = new Factory<EncodingProvider>();
+export const EncodingFactory = new Factory<EncodingProvider>('Encoding');

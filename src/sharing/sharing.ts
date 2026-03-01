@@ -5,4 +5,4 @@ export interface SharingProvider extends NamedProvider {
   combine(shares: Uint8Array[]): Promise<Uint8Array>;
 }
 
-export const SharingFactory = new Factory<SharingProvider>();
+export const SharingFactory = new Factory<SharingProvider>('Sharing');
