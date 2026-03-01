@@ -93,9 +93,9 @@ export class Document {
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data = {
       v: DOCUMENT_VERSION,
-      c: Buffer.from(this.ciphertext).toString('base64'),
+      c: encoding.encode(this.ciphertext),
       m: {
-        i: Buffer.from(this.metadata.iv).toString('base64'),
+        i: encoding.encode(this.metadata.iv),
         a: this.metadata.algorithm,
       },
     };
@@ -119,8 +119,8 @@ export class Document {
       throw new UnsupportedVersionError(data.v, DOCUMENT_VERSION);
     }
 
-    return new Document(new Uint8Array(Uint8Array.from(Buffer.from(data.c, 'base64'))), {
-      iv: new Uint8Array(Uint8Array.from(Buffer.from(data.m.i, 'base64'))),
+    return new Document(encoding.decode(data.c), {
+      iv: encoding.decode(data.m.i),
       algorithm: data.m.a,
     });
   }

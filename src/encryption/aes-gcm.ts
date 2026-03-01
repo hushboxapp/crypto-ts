@@ -64,7 +64,6 @@ export class AESGCMProvider implements EncryptionProvider {
    * @throws {EmptyIVError} If IV is empty.
    */
   async encrypt(data: Uint8Array, key: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
-    if (data.length === 0) throw new EmptyDataError();
     if (key.length === 0) throw new EmptyKeyError();
     if (iv.length === 0) throw new EmptyIVError();
 
@@ -94,7 +93,6 @@ export class AESGCMProvider implements EncryptionProvider {
    * @throws {DecryptionError} If decryption or authentication fails.
    */
   async decrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
-    if (ciphertext.length === 0) throw new EmptyDataError('Ciphertext cannot be empty.');
     if (key.length === 0) throw new EmptyKeyError();
     if (iv.length === 0) throw new EmptyIVError();
 

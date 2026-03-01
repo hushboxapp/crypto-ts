@@ -21,7 +21,7 @@ export interface Argon2Options {
 /**
  * The default recommended parameters for Argon2id.
  */
-const DEFAULT_ARGON2_OPTIONS = {
+export const DEFAULT_ARGON2_OPTIONS = {
   parallelism: 1,
   iterations: 2,
   memorySize: 65536, // 64 MB

@@ -6,18 +6,32 @@ import { Factory, NamedProvider } from '../factory';
  */
 export interface EncodingProvider extends NamedProvider {
   /**
-   * Encodes binary data into a string.
-   * @param str - The string to encode (e.g., a JSON string).
+   * Encodes a string into its encoded representation.
+   * @param str - The string to encode.
    * @returns The encoded string.
    */
   btoa(str: string): string;
 
   /**
    * Decodes an encoded string back to its original representation.
-   * @param b64 - The encoded string (e.g., Base64).
+   * @param encoded - The encoded string.
    * @returns The decoded string.
    */
-  atob(b64: string): string;
+  atob(encoded: string): string;
+
+  /**
+   * Encodes binary data (Uint8Array) into a string representation.
+   * @param data - The raw bytes to encode.
+   * @returns The encoded string.
+   */
+  encode(data: Uint8Array): string;
+
+  /**
+   * Decodes an encoded string back to its original binary representation.
+   * @param encoded - The encoded string.
+   * @returns The decoded bytes as a Uint8Array.
+   */
+  decode(encoded: string): Uint8Array;
 }
 
 /**

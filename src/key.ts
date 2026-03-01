@@ -212,9 +212,9 @@ export class EncryptedKey {
       e: this.encryptionProvider,
       s: this.sharingProvider,
       p: this.protectors.map((p) => ({
-        s: Buffer.from(p.salt).toString('base64'),
-        i: Buffer.from(p.iv).toString('base64'),
-        c: Buffer.from(p.ciphertext).toString('base64'),
+        s: encoding.encode(p.salt),
+        i: encoding.encode(p.iv),
+        c: encoding.encode(p.ciphertext),
         a: p.hashingAlgorithm,
       })),
     };
@@ -238,9 +238,9 @@ export class EncryptedKey {
 
     const protectors: KeyProtector[] = data.p.map(
       (p: { s: string; i: string; c: string; a: string }) => ({
-        salt: new Uint8Array(Uint8Array.from(Buffer.from(p.s, 'base64'))),
-        iv: new Uint8Array(Uint8Array.from(Buffer.from(p.i, 'base64'))),
-        ciphertext: new Uint8Array(Uint8Array.from(Buffer.from(p.c, 'base64'))),
+        salt: encoding.decode(p.s),
+        iv: encoding.decode(p.i),
+        ciphertext: encoding.decode(p.c),
         hashingAlgorithm: p.a,
       }),
     );
