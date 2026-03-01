@@ -1,4 +1,4 @@
-# @vaultick/crypto
+# 🔐 @vaultick/crypto
 
 A browser-compatible TypeScript library for advanced cryptographic operations.
 
