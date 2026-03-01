@@ -41,4 +41,22 @@ describe('AESGCMProvider', () => {
 
     await expect(provider.decrypt(ciphertext, key, iv2)).rejects.toThrow();
   });
+
+  it('should throw EmptyKeyError for empty key', async () => {
+    const key = new Uint8Array(0);
+    const iv = randomness.generate(12);
+    const data = new TextEncoder().encode('Hello');
+
+    await expect(provider.encrypt(data, key, iv)).rejects.toThrow();
+    await expect(provider.decrypt(data, key, iv)).rejects.toThrow();
+  });
+
+  it('should throw EmptyIVError for empty IV', async () => {
+    const key = randomness.generate(32);
+    const iv = new Uint8Array(0);
+    const data = new TextEncoder().encode('Hello');
+
+    await expect(provider.encrypt(data, key, iv)).rejects.toThrow();
+    await expect(provider.decrypt(data, key, iv)).rejects.toThrow();
+  });
 });

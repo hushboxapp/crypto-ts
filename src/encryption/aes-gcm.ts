@@ -3,7 +3,6 @@ import {
   SecureContextError,
   DecryptionError,
   CryptoApiUnavailableError,
-  EmptyDataError,
   EmptyKeyError,
   EmptyIVError,
 } from '../errors';
@@ -59,7 +58,6 @@ export class AESGCMProvider implements EncryptionProvider {
    * @param key - 256-bit symmetric key.
    * @param iv - 12-byte initialization vector.
    * @returns Promise resolving to ciphertext + auth tag.
-   * @throws {EmptyDataError} If data is empty.
    * @throws {EmptyKeyError} If key is empty.
    * @throws {EmptyIVError} If IV is empty.
    */
@@ -87,7 +85,6 @@ export class AESGCMProvider implements EncryptionProvider {
    * @param key - 256-bit symmetric key.
    * @param iv - 12-byte initialization vector.
    * @returns Promise resolving to original plaintext.
-   * @throws {EmptyDataError} If ciphertext is empty.
    * @throws {EmptyKeyError} If key is empty.
    * @throws {EmptyIVError} If IV is empty.
    * @throws {DecryptionError} If decryption or authentication fails.
