@@ -8,11 +8,11 @@ export interface HashingProvider extends NamedProvider {
   /**
    * Derives a cryptographic key from a password and salt.
    *
-   * @param password - The user-provided password string.
+   * @param password - The user-provided password string or raw bytes.
    * @param salt - A cryptographically random buffer to prevent rainbow table attacks.
    * @returns A promise that resolves to the derived 256-bit key material.
    */
-  derive(password: string, salt: Uint8Array): Promise<Uint8Array>;
+  derive(password: string | Uint8Array, salt: Uint8Array): Promise<Uint8Array>;
 
   /**
    * Retrieves the specific parameters used by this hashing instance.

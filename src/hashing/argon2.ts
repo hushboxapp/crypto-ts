@@ -31,11 +31,14 @@ export const DEFAULT_ARGON2_OPTIONS = {
 /**
  * Low-level helper to derive a key using the Argon2id WebAssembly implementation.
  *
- * @param password - The user password.
+ * @param password - The user password (string or raw bytes).
  * @param options - Argon2id parameters and salt.
  * @returns A promise that resolves to the derived key as a Uint8Array.
  */
-export async function deriveKey(password: string, options: Argon2Options): Promise<Uint8Array> {
+export async function deriveKey(
+  password: string | Uint8Array,
+  options: Argon2Options,
+): Promise<Uint8Array> {
   const params = {
     ...DEFAULT_ARGON2_OPTIONS,
     ...options,
@@ -69,11 +72,11 @@ export class Argon2Provider implements HashingProvider {
 
   /**
    * Derives a 256-bit key from a password.
-   * @param password - The user-provided password.
+   * @param password - The user-provided password (string or raw bytes).
    * @param salt - The cryptographic salt.
    * @returns A promise resolving to the derived key.
    */
-  async derive(password: string, salt: Uint8Array): Promise<Uint8Array> {
+  async derive(password: string | Uint8Array, salt: Uint8Array): Promise<Uint8Array> {
     return await deriveKey(password, { ...this.options, salt });
   }
 

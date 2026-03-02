@@ -32,11 +32,11 @@ export class Argon2WorkerProvider implements HashingProvider {
   /**
    * Offloads key derivation to the background worker.
    *
-   * @param password - The user password.
+   * @param password - The user password (string or raw bytes).
    * @param salt - The cryptographic salt.
    * @returns A promise that resolves when the worker finishes hashing.
    */
-  async derive(password: string, salt: Uint8Array): Promise<Uint8Array> {
+  async derive(password: string | Uint8Array, salt: Uint8Array): Promise<Uint8Array> {
     const id = this.nextId++;
     const params = this.getParams();
 
