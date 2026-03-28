@@ -1,12 +1,12 @@
 # Security Policy
 
-Security is our top priority for `@vaultick/crypto`. If you find a security vulnerability, we'd appreciate it if you'd tell us about it right away.
+Security is our top priority for `@hushboxapp/crypto`. If you find a security vulnerability, we'd appreciate it if you'd tell us about it right away.
 
 ## Reporting a Vulnerability
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, report them privately through [GitHub Security Advisories](https://github.com/vaultick/crypto-ts/security/advisories/new).
+Instead, report them privately through [GitHub Security Advisories](https://github.com/hushboxapp/crypto-ts/security/advisories/new).
 
 When reporting, please include:
 - A description of the vulnerability.
@@ -17,7 +17,7 @@ We will acknowledge your report within 48 hours and work with you to resolve it.
 
 ## Supported Versions
 
-Only the latest stable version of `@vaultick/crypto` is supported for security updates.
+Only the latest stable version of `@hushboxapp/crypto` is supported for security updates.
 
 | Version | Supported |
 | ------- | --------- |

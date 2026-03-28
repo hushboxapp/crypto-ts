@@ -1,8 +1,8 @@
-# 🔐 @vaultick/crypto
+# 🔐 @hushboxapp/crypto
 
-[![Build & Tests](https://github.com/vaultick/crypto-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/vaultick/crypto-ts/actions/workflows/ci.yml)
-[![NPM Version](https://img.shields.io/npm/v/@vaultick/crypto.svg)](https://www.npmjs.com/package/@vaultick/crypto)
-[![Release Status](https://github.com/vaultick/crypto-ts/actions/workflows/release-please.yml/badge.svg)](https://github.com/vaultick/crypto-ts/actions/workflows/release-please.yml)
+[![Build & Tests](https://github.com/hushboxapp/crypto-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/hushboxapp/crypto-ts/actions/workflows/ci.yml)
+[![NPM Version](https://img.shields.io/npm/v/@hushboxapp/crypto.svg)](https://www.npmjs.com/package/@hushboxapp/crypto)
+[![Release Status](https://github.com/hushboxapp/crypto-ts/actions/workflows/release-please.yml/badge.svg)](https://github.com/hushboxapp/crypto-ts/actions/workflows/release-please.yml)
 
 A browser-compatible TypeScript library for advanced cryptographic operations.
 
@@ -16,7 +16,7 @@ A browser-compatible TypeScript library for advanced cryptographic operations.
 ## Installation
 
 ```bash
-npm install @vaultick/crypto
+npm install @hushboxapp/crypto
 ```
 
 ## Quick Start
@@ -26,7 +26,7 @@ The core workflow involves creating a master `Key`, protecting it with one or mo
 ### Encrypting Data
 
 ```typescript
-import { Key, Document } from '@vaultick/crypto';
+import { Key, Document } from '@hushboxapp/crypto';
 
 // 1. Generate a new random 256-bit master key
 const masterKey = Key.generate();
@@ -38,7 +38,7 @@ const threshold = 2;
 const encryptedKey = await masterKey.encrypt(passwords, threshold);
 
 // 3. Encrypt sensitive data
-const data = new TextEncoder().encode('Hello, Vaultick!');
+const data = new TextEncoder().encode('Hello, Hushbox!');
 const encryptedDocument = await Document.encrypt(data, masterKey);
 
 // 4. Serialize for storage or transmission
@@ -49,7 +49,7 @@ const serializedDoc = encryptedDocument.encode();
 ### Decrypting Data
 
 ```typescript
-import { EncryptedKey, Document } from '@vaultick/crypto';
+import { EncryptedKey, Document } from '@hushboxapp/crypto';
 
 // 1. Restore objects from serialized strings
 const restoredKey = EncryptedKey.decode(serializedKey);
@@ -60,5 +60,5 @@ const unlockedKey = await restoredKey.decrypt(['p4ssw0rd1', 'another-pass']);
 
 // 3. Decrypt the document content
 const decryptedData = await restoredDoc.decrypt(unlockedKey);
-console.log(new TextDecoder().decode(decryptedData)); // "Hello, Vaultick!"
+console.log(new TextDecoder().decode(decryptedData)); // "Hello, Hushbox!"
 ```

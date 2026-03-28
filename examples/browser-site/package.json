@@ -1,7 +1,7 @@
 {
   "name": "example-browser-site",
   "version": "1.0.0",
-  "description": "A simple browser website using @vaultick/crypto",
+  "description": "A simple browser website using @hushboxapp/crypto",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vaultick/crypto": "^1.0.0"
+    "@hushboxapp/crypto": "^1.0.0"
   },
   "devDependencies": {
     "vite": "^5.0.0"

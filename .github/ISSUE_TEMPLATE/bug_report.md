@@ -13,7 +13,7 @@ A clear and concise description of what the bug is.
 **To Reproduce**
 Steps to reproduce the behavior or a minimal code example:
 ```typescript
-import { Key, Document } from '@vaultick/crypto';
+import { Key, Document } from '@hushboxapp/crypto';
 
 // Your code here
 ```

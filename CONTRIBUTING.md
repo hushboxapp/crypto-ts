@@ -1,6 +1,6 @@
-# Contributing to @vaultick/crypto
+# Contributing to @hushboxapp/crypto
 
-First off, thank you for considering contributing to `@vaultick/crypto`! It's people like you who make it such a great library.
+First off, thank you for considering contributing to `@hushboxapp/crypto`! It's people like you who make it such a great library.
 
 ## Code of Conduct
 
@@ -62,7 +62,7 @@ We use [Release Please](https://github.com/googleapis/release-please) to manage 
     - An updated `CHANGELOG.md` based on your Conventional Commits.
 2.  **Merging the Release PR**: When a maintainer merges the Release PR:
     - A new GitHub Release is created and tagged.
-    - A GitHub Action is triggered to build the library and publish it to [npm](https://www.npmjs.com/package/@vaultick/crypto).
+    - A GitHub Action is triggered to build the library and publish it to [npm](https://www.npmjs.com/package/@hushboxapp/crypto).
 
 ## Style Guidelines
 

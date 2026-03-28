@@ -1,5 +1,5 @@
 {
-  "name": "@vaultick/crypto",
+  "name": "@hushboxapp/crypto",
   "version": "1.0.0",
   "description": "A browser-compatible TypeScript library for document encryption with multi-password support.",
   "main": "./dist/index.js",
@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vaultick/crypto-ts.git"
+    "url": "git+https://github.com/hushboxapp/crypto-ts.git"
   },
   "keywords": [
     "crypto",
@@ -37,15 +37,15 @@
     "dek-kek",
     "browser",
     "typescript",
-    "vaultick"
+    "hushboxapp"
   ],
-  "author": "Vaultick",
+  "author": "Hushbox",
   "license": "Apache-2.0",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/vaultick/crypto-ts/issues"
+    "url": "https://github.com/hushboxapp/crypto-ts/issues"
   },
-  "homepage": "https://github.com/vaultick/crypto-ts#readme",
+  "homepage": "https://github.com/hushboxapp/crypto-ts#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.3.3",

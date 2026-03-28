@@ -1,11 +1,11 @@
 import { Command } from 'commander';
-import { Key, Document, EncryptedKey } from '@vaultick/crypto';
+import { Key, Document, EncryptedKey } from '@hushboxapp/crypto';
 
 const program = new Command();
 
 program
-  .name('vaultick-cli')
-  .description('A simple CLI for encrypting and decrypting data using @vaultick/crypto')
+  .name('hushbox-cli')
+  .description('A simple CLI for encrypting and decrypting data using @hushboxapp/crypto')
   .version('1.0.0');
 
 program.command('encrypt')

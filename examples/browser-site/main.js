@@ -1,4 +1,4 @@
-import { Key, Document, EncryptedKey } from '@vaultick/crypto';
+import { Key, Document, EncryptedKey } from '@hushboxapp/crypto';
 
 // Encryption UI logic
 document.getElementById('encryptBtn').onclick = async () => {

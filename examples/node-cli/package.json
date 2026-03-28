@@ -1,12 +1,12 @@
 {
   "name": "example-node-cli",
   "version": "1.0.0",
-  "description": "A simple Node.js CLI tool using @vaultick/crypto",
+  "description": "A simple Node.js CLI tool using @hushboxapp/crypto",
   "main": "index.js",
   "type": "module",
   "private": true,
   "dependencies": {
-    "@vaultick/crypto": "^1.0.0",
+    "@hushboxapp/crypto": "^1.0.0",
     "commander": "^12.1.0"
   },
   "scripts": {
