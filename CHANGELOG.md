@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1](https://github.com/hushboxapp/crypto-ts/compare/v1.0.0...v1.0.1) (2026-03-28)
+
+
+### Bug Fixes
+
+* dependency vulnerabilities ([c898d39](https://github.com/hushboxapp/crypto-ts/commit/c898d39540a5727ba0d9886177e16d03d657b420))
+* migrate organization from vaultick to hushboxapp ([a4167fa](https://github.com/hushboxapp/crypto-ts/commit/a4167fad9b36c1a683b66e709b08e9d14d3e5bc3))
+* update github actions versions ([4775744](https://github.com/hushboxapp/crypto-ts/commit/4775744b7d0612b0b765774f0f4b6b80d0ec907a))
+
 ## 1.0.0 (2026-03-01)
 
 
