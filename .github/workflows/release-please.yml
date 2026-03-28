@@ -20,10 +20,10 @@ jobs:
           release-type: node
 
       # The steps below only run if a release PR is merged
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ steps.release.outputs.release_created }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
