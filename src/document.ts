@@ -2,7 +2,19 @@ import { EncryptionFactory } from './encryption/encryption';
 import { Key } from './key';
 import { EncodingFactory } from './encoding/encoding';
 import { RandomnessFactory } from './randomness/randomness';
-import { EmptyDataError, UnsupportedVersionError } from './errors';
+import {
+  DisallowedProviderError,
+  EmptyDataError,
+  KeyDisposedError,
+  UnsupportedVersionError,
+} from './errors';
+
+/**
+ * Default set of encryption algorithms accepted on Document.decode. Callers can
+ * widen this list to permit custom providers, but the default refuses anything
+ * other than the algorithms shipped by this library.
+ */
+export const DEFAULT_ALLOWED_DOCUMENT_ALGORITHMS: readonly string[] = ['aes-gcm'];
 
 /**
  * The current version of the serialized Document format.
@@ -85,6 +97,7 @@ export class Document {
     if (data.length === 0) {
       throw new EmptyDataError();
     }
+    if (key.disposed) throw new KeyDisposedError();
     const encryption = EncryptionFactory.getProvider(options.encryptionProvider || 'aes-gcm');
     const randomness = RandomnessFactory.getProvider(options.randomnessProvider || 'native');
 
@@ -109,6 +122,7 @@ export class Document {
    * @returns A promise that resolves to the original decrypted data.
    */
   async decrypt(key: Key): Promise<Uint8Array> {
+    if (key.disposed) throw new KeyDisposedError();
     const encryption = EncryptionFactory.getProvider(this.metadata.algorithm);
     const aad =
       this.version >= 2 ? buildDocumentAAD(this.version, this.metadata.algorithm) : undefined;
@@ -136,11 +150,29 @@ export class Document {
   /**
    * Deserializes a Document from an encoded string.
    * @param encoded - The encoded string representation of the Document.
-   * @param encodingProvider - The name of the encoding provider to use (defaults to 'base64').
+   * @param options - Optional decode configuration.
+   * @param options.encodingProvider - Encoding provider name. Defaults to 'base64'.
+   * @param options.allowedAlgorithms - Encryption algorithm names accepted from
+   * the envelope. Defaults to {@link DEFAULT_ALLOWED_DOCUMENT_ALGORITHMS}.
+   * Decoding rejects any other value to prevent envelope-driven provider
+   * substitution. Pass an explicit list to opt into custom providers.
    * @returns A Document instance.
    * @throws {UnsupportedVersionError} If the version in the encoded data is not supported.
+   * @throws {DisallowedProviderError} If the algorithm name is not on the allowlist.
    */
-  static decode(encoded: string, encodingProvider = 'base64'): Document {
+  static decode(
+    encoded: string,
+    options:
+      | string
+      | {
+          encodingProvider?: string;
+          allowedAlgorithms?: readonly string[];
+        } = {},
+  ): Document {
+    const opts = typeof options === 'string' ? { encodingProvider: options } : options;
+    const encodingProvider = opts.encodingProvider ?? 'base64';
+    const allowed = opts.allowedAlgorithms ?? DEFAULT_ALLOWED_DOCUMENT_ALGORITHMS;
+
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data: { v: number; c: string; m: { i: string; a: string } } = JSON.parse(
       encoding.atob(encoded),
@@ -148,6 +180,9 @@ export class Document {
 
     if (data.v !== DOCUMENT_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, DOCUMENT_VERSION);
+    }
+    if (!allowed.includes(data.m.a)) {
+      throw new DisallowedProviderError('Encryption', data.m.a, allowed);
     }
 
     return new Document(

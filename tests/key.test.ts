@@ -194,6 +194,69 @@ describe('Key', () => {
     await expect(key.encrypt(['p1'], 0)).rejects.toThrow(InvalidThresholdError);
   });
 
+  it('should zero key material on dispose() and refuse use afterwards', async () => {
+    const { KeyDisposedError } = await import('../src/errors');
+    const key = Key.generate();
+    expect(key.disposed).toBe(false);
+    expect(key.material.some((b) => b !== 0)).toBe(true);
+
+    key.dispose();
+    expect(key.disposed).toBe(true);
+    expect(key.material.every((b) => b === 0)).toBe(true);
+
+    await expect(key.encrypt(['p'], 1)).rejects.toThrow(KeyDisposedError);
+    // Idempotent: a second dispose() is a no-op.
+    key.dispose();
+  });
+
+  it('should reject EncryptedKey.decode when encryption provider not allowlisted', async () => {
+    const { DisallowedProviderError } = await import('../src/errors');
+    const key = Key.generate();
+    const enc = await key.encrypt(['p'], 1);
+    const json = JSON.parse(atob(enc.encode()));
+    json.e = 'rot13';
+    const tampered = btoa(JSON.stringify(json));
+    expect(() => EncryptedKey.decode(tampered)).toThrow(DisallowedProviderError);
+  });
+
+  it('should reject EncryptedKey.decode when sharing provider not allowlisted', async () => {
+    const { DisallowedProviderError } = await import('../src/errors');
+    const key = Key.generate();
+    const enc = await key.encrypt(['p'], 1);
+    const json = JSON.parse(atob(enc.encode()));
+    json.s = 'unknown-sss';
+    const tampered = btoa(JSON.stringify(json));
+    expect(() => EncryptedKey.decode(tampered)).toThrow(DisallowedProviderError);
+  });
+
+  it('should reject EncryptedKey.decode when hashing provider not allowlisted', async () => {
+    const { DisallowedProviderError } = await import('../src/errors');
+    const key = Key.generate();
+    const enc = await key.encrypt(['p'], 1);
+    const json = JSON.parse(atob(enc.encode()));
+    json.p[0].a = 'md5';
+    const tampered = btoa(JSON.stringify(json));
+    expect(() => EncryptedKey.decode(tampered)).toThrow(DisallowedProviderError);
+  });
+
+  it('should accept widened allowlist for custom providers', async () => {
+    const key = Key.generate();
+    const enc = await key.encrypt(['p'], 1);
+    const decoded = EncryptedKey.decode(enc.encode(), {
+      allowed: { encryption: ['aes-gcm'], sharing: ['shamir'], hashing: ['argon2id'] },
+    });
+    const restored = await decoded.decrypt(['p']);
+    expect(restored.material).toEqual(key.material);
+  });
+
+  it('should still accept legacy string-form encodingProvider argument', async () => {
+    const key = Key.generate();
+    const enc = await key.encrypt(['p'], 1);
+    const decoded = EncryptedKey.decode(enc.encode(), 'base64');
+    const restored = await decoded.decrypt(['p']);
+    expect(restored.material).toEqual(key.material);
+  });
+
   it('should throw EmptyPasswordsError for empty passwords in decrypt', async () => {
     const { EmptyPasswordsError } = await import('../src/errors');
     const key = Key.generate();
