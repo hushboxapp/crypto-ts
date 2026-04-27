@@ -32,6 +32,26 @@ describe('Document', () => {
     expect(decrypted).toEqual(data);
   });
 
+  it('should refuse encrypt/decrypt with a disposed Key', async () => {
+    const { KeyDisposedError } = await import('../src/errors');
+    const key = Key.generate();
+    const data = new TextEncoder().encode('payload');
+    const doc = await Document.encrypt(data, key);
+
+    key.dispose();
+    await expect(Document.encrypt(data, key)).rejects.toThrow(KeyDisposedError);
+    await expect(doc.decrypt(key)).rejects.toThrow(KeyDisposedError);
+  });
+
+  it('should still accept legacy string-form encodingProvider argument', async () => {
+    const key = Key.generate();
+    const data = new TextEncoder().encode('payload');
+    const doc = await Document.encrypt(data, key);
+    const decoded = Document.decode(doc.encode(), 'base64');
+    const decrypted = await decoded.decrypt(key);
+    expect(decrypted).toEqual(data);
+  });
+
   it('should throw EmptyDataError for empty data', async () => {
     const { EmptyDataError } = await import('../src/errors');
     const key = Key.generate();
@@ -74,8 +94,25 @@ describe('Document', () => {
     json.m.a = 'aes-gcm-alias';
     const tampered = btoa(JSON.stringify(json));
 
-    const tamperedDoc = Document.decode(tampered);
+    // Widen the algorithm allowlist so the decoder accepts the alias and we
+    // exercise the AAD-mismatch path rather than the allowlist guard.
+    const tamperedDoc = Document.decode(tampered, {
+      allowedAlgorithms: ['aes-gcm', 'aes-gcm-alias'],
+    });
     await expect(tamperedDoc.decrypt(key)).rejects.toThrow(DecryptionError);
+  });
+
+  it('should reject decode when algorithm is not on the allowlist', async () => {
+    const { DisallowedProviderError } = await import('../src/errors');
+    const key = Key.generate();
+    const data = new TextEncoder().encode('payload');
+    const doc = await Document.encrypt(data, key);
+
+    const json = JSON.parse(atob(doc.encode()));
+    json.m.a = 'rot13';
+    const tampered = btoa(JSON.stringify(json));
+
+    expect(() => Document.decode(tampered)).toThrow(DisallowedProviderError);
   });
 
   it('should decode legacy v1 documents (no AAD) and decrypt them', async () => {

@@ -159,3 +159,27 @@ export class WorkerTerminatedError extends CryptoError {
     super(message);
   }
 }
+
+/**
+ * Thrown when a serialized envelope references a provider name that is not on
+ * the caller-supplied allowlist. Defends against confused-deputy attacks where
+ * a hostile module registers a provider under a known name and a tampered
+ * envelope redirects decryption to it.
+ */
+export class DisallowedProviderError extends CryptoError {
+  constructor(type: string, name: string, allowed: readonly string[]) {
+    super(
+      `${type} provider '${name}' is not allowed. Allowed: [${allowed.map((a) => `'${a}'`).join(', ')}].`,
+    );
+  }
+}
+
+/**
+ * Thrown when an operation is attempted on a Key whose material has been
+ * zeroed via {@link Key.dispose}.
+ */
+export class KeyDisposedError extends CryptoError {
+  constructor(message = 'Key has been disposed; its material is no longer available.') {
+    super(message);
+  }
+}

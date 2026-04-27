@@ -5,6 +5,8 @@ import {
   EmptyPasswordsError,
   EmptyKeyError,
   UnsupportedVersionError,
+  DisallowedProviderError,
+  KeyDisposedError,
 } from './errors';
 import { SharingFactory } from './sharing/sharing';
 import { EncryptionFactory } from './encryption/encryption';
@@ -82,6 +84,22 @@ const LEGACY_V1_HASHING_PARAMS: Record<string, unknown> = {
 };
 
 /**
+ * Default sets of provider names accepted on EncryptedKey.decode. Callers can
+ * override per-call to permit custom providers; the defaults refuse anything
+ * other than the providers shipped by this library, preventing
+ * envelope-driven redirection to a hostile registered provider.
+ */
+export const DEFAULT_ALLOWED_KEY_PROVIDERS: {
+  encryption: readonly string[];
+  sharing: readonly string[];
+  hashing: readonly string[];
+} = {
+  encryption: ['aes-gcm'],
+  sharing: ['shamir'],
+  hashing: ['argon2id'],
+};
+
+/**
  * Represents metadata about how a specific share of a Key is protected.
  */
 export interface KeyProtector {
@@ -103,8 +121,17 @@ export interface KeyProtector {
 /**
  * Represents an unlocked cryptographic Key in memory.
  * This class holds the raw sensitive material and provides methods to protect it for persistence.
+ *
+ * Note: `material` is exposed as `readonly` at the type level, but the bytes
+ * themselves remain mutable. {@link Key.dispose} zeros the buffer in place
+ * so callers can shorten the in-memory lifetime of sensitive material when
+ * they are done with it. JavaScript still offers no hard guarantee that
+ * copies have not been made by the runtime; treat this as best-effort
+ * hygiene rather than a security boundary.
  */
 export class Key {
+  private _disposed = false;
+
   /**
    * Creates a new Key instance from raw material.
    * @param material - The 256-bit (32 bytes) raw key material.
@@ -118,6 +145,24 @@ export class Key {
     if (material.length !== KEY_MATERIAL_LENGTH) {
       throw new InvalidKeyError();
     }
+  }
+
+  /**
+   * Indicates whether {@link dispose} has been called on this instance.
+   */
+  get disposed(): boolean {
+    return this._disposed;
+  }
+
+  /**
+   * Zeros the underlying key material and marks the Key as disposed.
+   * Subsequent attempts to encrypt or otherwise use the Key will throw
+   * {@link KeyDisposedError}. Idempotent.
+   */
+  dispose(): void {
+    if (this._disposed) return;
+    this.material.fill(0);
+    this._disposed = true;
   }
 
   /**
@@ -155,6 +200,7 @@ export class Key {
       randomnessProvider?: string;
     } = {},
   ): Promise<EncryptedKey> {
+    if (this._disposed) throw new KeyDisposedError();
     if (passwords.length === 0) {
       throw new EmptyPasswordsError();
     }
@@ -191,15 +237,19 @@ export class Key {
         hashingParams,
         index: i,
       });
-      const ciphertext = await encryption.encrypt(shares[i], passwordKey, iv, aad);
-
-      protectors.push({
-        salt,
-        iv,
-        ciphertext,
-        hashingAlgorithm: hashing.name,
-        hashingParams: { ...hashingParams },
-      });
+      try {
+        const ciphertext = await encryption.encrypt(shares[i], passwordKey, iv, aad);
+        protectors.push({
+          salt,
+          iv,
+          ciphertext,
+          hashingAlgorithm: hashing.name,
+          hashingParams: { ...hashingParams },
+        });
+      } finally {
+        passwordKey.fill(0);
+        shares[i].fill(0);
+      }
     }
 
     return new EncryptedKey(protectors, threshold, encryption.name, sharing.name, KEY_VERSION);
@@ -255,13 +305,10 @@ export class EncryptedKey {
     for (const password of passwords) {
       for (let i = 0; i < this.protectors.length; i++) {
         const protector = this.protectors[i];
+        let passwordKey: Uint8Array | undefined;
         try {
           const hashing = HashingFactory.getProvider(protector.hashingAlgorithm);
-          const passwordKey = await hashing.derive(
-            password,
-            protector.salt,
-            protector.hashingParams,
-          );
+          passwordKey = await hashing.derive(password, protector.salt, protector.hashingParams);
           const aad =
             this.version >= 2
               ? buildKeyProtectorAAD({
@@ -284,16 +331,24 @@ export class EncryptedKey {
           break; // This password unlocked a share
         } catch {
           continue; // Try next protector
+        } finally {
+          if (passwordKey) passwordKey.fill(0);
         }
       }
       if (shares.length >= this.threshold) break;
     }
 
     if (shares.length < this.threshold) {
+      // Best-effort wipe of partial shares before propagating the error.
+      for (const s of shares) s.fill(0);
       throw new InsufficientSharesError(shares.length, this.threshold);
     }
 
-    const material = this.threshold === 1 ? shares[0] : await sharing.combine(shares);
+    const material =
+      this.threshold === 1 ? new Uint8Array(shares[0]) : await sharing.combine(shares);
+    // Threshold-1 path returns the share buffer itself; clone first, then zero
+    // every share so only the new Key holds reconstructed material.
+    for (const s of shares) s.fill(0);
     return new Key(material);
   }
 
@@ -323,26 +378,63 @@ export class EncryptedKey {
   /**
    * Deserializes an encrypted key from an encoded string.
    * @param encoded - The encoded string representation of the encrypted key.
-   * @param encodingProvider - The name of the encoding provider to use (defaults to 'base64').
+   * @param options - Optional decode configuration. For backward compatibility,
+   * may also be passed as the encoding provider name string directly.
+   * @param options.encodingProvider - Encoding provider name. Defaults to 'base64'.
+   * @param options.allowed - Per-category provider allowlists. Each unspecified
+   * category falls back to the matching entry in
+   * {@link DEFAULT_ALLOWED_KEY_PROVIDERS}. Decoding rejects any envelope that
+   * names a provider outside the allowlist, preventing redirection to a
+   * hostile registered provider.
    * @returns An EncryptedKey instance.
    * @throws {UnsupportedVersionError} If the version in the encoded data is not supported.
+   * @throws {DisallowedProviderError} If any provider name is not on the allowlist.
    */
-  static decode(encoded: string, encodingProvider = 'base64'): EncryptedKey {
+  static decode(
+    encoded: string,
+    options:
+      | string
+      | {
+          encodingProvider?: string;
+          allowed?: {
+            encryption?: readonly string[];
+            sharing?: readonly string[];
+            hashing?: readonly string[];
+          };
+        } = {},
+  ): EncryptedKey {
+    const opts = typeof options === 'string' ? { encodingProvider: options } : options;
+    const encodingProvider = opts.encodingProvider ?? 'base64';
+    const allowedEncryption = opts.allowed?.encryption ?? DEFAULT_ALLOWED_KEY_PROVIDERS.encryption;
+    const allowedSharing = opts.allowed?.sharing ?? DEFAULT_ALLOWED_KEY_PROVIDERS.sharing;
+    const allowedHashing = opts.allowed?.hashing ?? DEFAULT_ALLOWED_KEY_PROVIDERS.hashing;
+
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data = JSON.parse(encoding.atob(encoded));
 
     if (data.v !== KEY_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, KEY_VERSION);
     }
+    if (!allowedEncryption.includes(data.e)) {
+      throw new DisallowedProviderError('Encryption', data.e, allowedEncryption);
+    }
+    if (!allowedSharing.includes(data.s)) {
+      throw new DisallowedProviderError('Sharing', data.s, allowedSharing);
+    }
 
     const protectors: KeyProtector[] = data.p.map(
-      (p: { s: string; i: string; c: string; a: string; h?: Record<string, unknown> }) => ({
-        salt: encoding.decode(p.s),
-        iv: encoding.decode(p.i),
-        ciphertext: encoding.decode(p.c),
-        hashingAlgorithm: p.a,
-        hashingParams: p.h ?? { ...LEGACY_V1_HASHING_PARAMS },
-      }),
+      (p: { s: string; i: string; c: string; a: string; h?: Record<string, unknown> }) => {
+        if (!allowedHashing.includes(p.a)) {
+          throw new DisallowedProviderError('Hashing', p.a, allowedHashing);
+        }
+        return {
+          salt: encoding.decode(p.s),
+          iv: encoding.decode(p.i),
+          ciphertext: encoding.decode(p.c),
+          hashingAlgorithm: p.a,
+          hashingParams: p.h ?? { ...LEGACY_V1_HASHING_PARAMS },
+        };
+      },
     );
     return new EncryptedKey(protectors, data.t, data.e, data.s, data.v);
   }
