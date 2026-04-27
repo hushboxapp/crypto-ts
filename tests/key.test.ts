@@ -96,6 +96,49 @@ describe('Key', () => {
     expect(() => new Key(new Uint8Array(33))).toThrow(InvalidKeyError);
   });
 
+  it('should decode legacy v1 keys and decrypt them', async () => {
+    // v1 keys did not persist hashing params; the decoder must fall back to the
+    // frozen v1 defaults. We construct a v1 blob by hand here to lock in compat.
+    const password = 'legacy-password';
+    const salt = new Uint8Array(16).fill(7);
+    const iv = new Uint8Array(12).fill(9);
+    const material = new Uint8Array(32).fill(42);
+
+    const v1Provider = new Argon2Provider({
+      iterations: 2,
+      memorySize: 65536,
+      parallelism: 1,
+      hashLength: 32,
+    });
+    const passwordKey = await v1Provider.derive(password, salt);
+
+    const { AESGCMProvider } = await import('../src/encryption/aes-gcm');
+    const aes = new AESGCMProvider();
+    const ciphertext = await aes.encrypt(material, passwordKey, iv);
+
+    const encoder = (await import('../src/encoding/base64')).Base64Engine;
+    const enc = new encoder();
+    const v1Blob = {
+      v: 1,
+      t: 1,
+      e: 'aes-gcm',
+      s: 'shamir',
+      p: [
+        {
+          s: enc.encode(salt),
+          i: enc.encode(iv),
+          c: enc.encode(ciphertext),
+          a: 'argon2id',
+        },
+      ],
+    };
+    const encoded = enc.btoa(JSON.stringify(v1Blob));
+
+    const decoded = EncryptedKey.decode(encoded);
+    const decrypted = await decoded.decrypt([password]);
+    expect(decrypted.material).toEqual(material);
+  }, 20000);
+
   it('should throw UnsupportedVersionError for incorrect version in decode', async () => {
     const { UnsupportedVersionError } = await import('../src/errors');
     const data = {

@@ -129,3 +129,33 @@ export class EmptyIVError extends CryptoError {
     super(message);
   }
 }
+
+/**
+ * Thrown when a background worker emits a fatal error (crash, uncaught exception,
+ * or message deserialization failure). All in-flight requests are rejected with
+ * this error and the provider is marked as unusable.
+ */
+export class WorkerError extends CryptoError {
+  constructor(message = 'Worker terminated unexpectedly.') {
+    super(message);
+  }
+}
+
+/**
+ * Thrown when a worker request exceeds its configured timeout.
+ */
+export class WorkerTimeoutError extends CryptoError {
+  constructor(timeoutMs: number) {
+    super(`Worker request timed out after ${timeoutMs}ms.`);
+  }
+}
+
+/**
+ * Thrown when a request is made to a worker that has been terminated or has
+ * encountered a fatal error.
+ */
+export class WorkerTerminatedError extends CryptoError {
+  constructor(message = 'Worker has been terminated and can no longer accept requests.') {
+    super(message);
+  }
+}

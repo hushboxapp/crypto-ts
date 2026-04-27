@@ -66,6 +66,75 @@ describe('Argon2WorkerProvider', () => {
     }
   });
 
+  it('should reject pending requests when worker emits onerror', { skip: typeof window === 'undefined' }, async () => {
+    const { WorkerError } = await import('../../src/errors');
+
+    const mockWorker: any = {
+      postMessage: () => {},
+      terminate: () => {},
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+    };
+
+    const provider = new Argon2WorkerProvider(() => mockWorker as Worker);
+    const randomness = new NativeProvider();
+    const salt = randomness.generate(16);
+
+    const inflight = provider.derive('password', salt);
+
+    // Simulate an uncaught error inside the worker thread.
+    const errorEvent = new ErrorEvent('error', { message: 'Worker crash' });
+    mockWorker.onerror!(errorEvent);
+
+    await expect(inflight).rejects.toThrow(WorkerError);
+    await expect(provider.derive('password', salt)).rejects.toThrow(WorkerError);
+  });
+
+  it('should reject requests that exceed the per-request timeout', { skip: typeof window === 'undefined' }, async () => {
+    const { WorkerTimeoutError } = await import('../../src/errors');
+
+    const mockWorker: any = {
+      postMessage: () => {
+        // Never respond — exercise the timeout path.
+      },
+      terminate: () => {},
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+    };
+
+    const provider = new Argon2WorkerProvider(() => mockWorker as Worker, {
+      timeoutMs: 25,
+    });
+    const randomness = new NativeProvider();
+    const salt = randomness.generate(16);
+
+    await expect(provider.derive('password', salt)).rejects.toThrow(WorkerTimeoutError);
+  });
+
+  it('should reject in-flight and future requests after terminate()', { skip: typeof window === 'undefined' }, async () => {
+    const { WorkerTerminatedError } = await import('../../src/errors');
+
+    const mockWorker: any = {
+      postMessage: () => {},
+      terminate: () => {},
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+    };
+
+    const provider = new Argon2WorkerProvider(() => mockWorker as Worker);
+    const randomness = new NativeProvider();
+    const salt = randomness.generate(16);
+
+    const inflight = provider.derive('password', salt);
+    provider.terminate();
+
+    await expect(inflight).rejects.toThrow(WorkerTerminatedError);
+    await expect(provider.derive('password', salt)).rejects.toThrow(WorkerTerminatedError);
+  });
+
   it('should handle worker errors', { skip: typeof window === 'undefined' }, async () => {
     // Mock worker that returns an error
     const mockWorker = {
