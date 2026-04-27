@@ -6,8 +6,22 @@ import { EmptyDataError, UnsupportedVersionError } from './errors';
 
 /**
  * The current version of the serialized Document format.
+ *
+ * v2 binds the format version and algorithm name into the AES-GCM
+ * Additional Authenticated Data so attackers cannot rewrite envelope
+ * metadata without invalidating the auth tag. v1 envelopes (which lack
+ * AAD) are still accepted for read-back compatibility.
  */
-const DOCUMENT_VERSION = 1;
+const DOCUMENT_VERSION = 2;
+
+/**
+ * Builds the AAD payload bound to a v2 Document. Must be reconstructed
+ * deterministically on decrypt; any deviation (version, algorithm) yields
+ * an authentication failure.
+ */
+function buildDocumentAAD(version: number, algorithm: string): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify({ v: version, a: algorithm }));
+}
 
 /**
  * The standard length for the initialization vector used in Document encryption (96 bits).
@@ -31,13 +45,23 @@ export interface DocumentMetadata {
  */
 export class Document {
   /**
+   * The format version this Document was created with. Drives the AAD binding
+   * decision on decrypt: v2+ uses AAD, v1 does not.
+   */
+  public readonly version: number;
+
+  /**
    * @param ciphertext - The encrypted data.
    * @param metadata - Information about the encryption (IV, algorithm).
+   * @param version - Format version. Defaults to the current {@link DOCUMENT_VERSION}.
    */
   constructor(
     public readonly ciphertext: Uint8Array,
     public readonly metadata: DocumentMetadata,
-  ) {}
+    version: number = DOCUMENT_VERSION,
+  ) {
+    this.version = version;
+  }
 
   /**
    * Encrypts plaintext data using an unlocked Key.
@@ -65,12 +89,17 @@ export class Document {
     const randomness = RandomnessFactory.getProvider(options.randomnessProvider || 'native');
 
     const iv = randomness.generate(DOCUMENT_IV_LENGTH);
-    const ciphertext = await encryption.encrypt(data, key.material, iv);
+    const aad = buildDocumentAAD(DOCUMENT_VERSION, encryption.name);
+    const ciphertext = await encryption.encrypt(data, key.material, iv, aad);
 
-    return new Document(ciphertext, {
-      iv,
-      algorithm: encryption.name,
-    });
+    return new Document(
+      ciphertext,
+      {
+        iv,
+        algorithm: encryption.name,
+      },
+      DOCUMENT_VERSION,
+    );
   }
 
   /**
@@ -81,7 +110,9 @@ export class Document {
    */
   async decrypt(key: Key): Promise<Uint8Array> {
     const encryption = EncryptionFactory.getProvider(this.metadata.algorithm);
-    return await encryption.decrypt(this.ciphertext, key.material, this.metadata.iv);
+    const aad =
+      this.version >= 2 ? buildDocumentAAD(this.version, this.metadata.algorithm) : undefined;
+    return await encryption.decrypt(this.ciphertext, key.material, this.metadata.iv, aad);
   }
 
   /**
@@ -92,7 +123,7 @@ export class Document {
   encode(encodingProvider = 'base64'): string {
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data = {
-      v: DOCUMENT_VERSION,
+      v: this.version,
       c: encoding.encode(this.ciphertext),
       m: {
         i: encoding.encode(this.metadata.iv),
@@ -115,13 +146,17 @@ export class Document {
       encoding.atob(encoded),
     );
 
-    if (data.v !== DOCUMENT_VERSION) {
+    if (data.v !== DOCUMENT_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, DOCUMENT_VERSION);
     }
 
-    return new Document(encoding.decode(data.c), {
-      iv: encoding.decode(data.m.i),
-      algorithm: data.m.a,
-    });
+    return new Document(
+      encoding.decode(data.c),
+      {
+        iv: encoding.decode(data.m.i),
+        algorithm: data.m.a,
+      },
+      data.v,
+    );
   }
 }

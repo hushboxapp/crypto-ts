@@ -57,11 +57,17 @@ export class AESGCMProvider implements EncryptionProvider {
    * @param data - Raw data to encrypt.
    * @param key - 256-bit symmetric key.
    * @param iv - 12-byte initialization vector.
+   * @param aad - Optional Additional Authenticated Data bound into the auth tag.
    * @returns Promise resolving to ciphertext + auth tag.
    * @throws {EmptyKeyError} If key is empty.
    * @throws {EmptyIVError} If IV is empty.
    */
-  async encrypt(data: Uint8Array, key: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
+  async encrypt(
+    data: Uint8Array,
+    key: Uint8Array,
+    iv: Uint8Array,
+    aad?: Uint8Array,
+  ): Promise<Uint8Array> {
     if (key.length === 0) throw new EmptyKeyError();
     if (iv.length === 0) throw new EmptyIVError();
 
@@ -70,11 +76,10 @@ export class AESGCMProvider implements EncryptionProvider {
       'encrypt',
     ]);
 
-    const encrypted = await crypto.encrypt(
-      { name: 'AES-GCM', iv: iv as BufferSource },
-      aesKey,
-      data as BufferSource,
-    );
+    const params: AesGcmParams = { name: 'AES-GCM', iv: iv as BufferSource };
+    if (aad && aad.length > 0) params.additionalData = aad as BufferSource;
+
+    const encrypted = await crypto.encrypt(params, aesKey, data as BufferSource);
 
     return new Uint8Array(encrypted);
   }
@@ -84,12 +89,18 @@ export class AESGCMProvider implements EncryptionProvider {
    * @param ciphertext - Encrypted data + auth tag.
    * @param key - 256-bit symmetric key.
    * @param iv - 12-byte initialization vector.
+   * @param aad - Optional Additional Authenticated Data. Must match the value supplied at encrypt time.
    * @returns Promise resolving to original plaintext.
    * @throws {EmptyKeyError} If key is empty.
    * @throws {EmptyIVError} If IV is empty.
    * @throws {DecryptionError} If decryption or authentication fails.
    */
-  async decrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
+  async decrypt(
+    ciphertext: Uint8Array,
+    key: Uint8Array,
+    iv: Uint8Array,
+    aad?: Uint8Array,
+  ): Promise<Uint8Array> {
     if (key.length === 0) throw new EmptyKeyError();
     if (iv.length === 0) throw new EmptyIVError();
 
@@ -98,11 +109,12 @@ export class AESGCMProvider implements EncryptionProvider {
       'decrypt',
     ]);
 
-    const decrypted = await crypto
-      .decrypt({ name: 'AES-GCM', iv: iv as BufferSource }, aesKey, ciphertext as BufferSource)
-      .catch(() => {
-        throw new DecryptionError();
-      });
+    const params: AesGcmParams = { name: 'AES-GCM', iv: iv as BufferSource };
+    if (aad && aad.length > 0) params.additionalData = aad as BufferSource;
+
+    const decrypted = await crypto.decrypt(params, aesKey, ciphertext as BufferSource).catch(() => {
+      throw new DecryptionError();
+    });
 
     return new Uint8Array(decrypted);
   }

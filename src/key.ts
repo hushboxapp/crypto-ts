@@ -30,8 +30,45 @@ export const KEY_PROTECTOR_IV_LENGTH = 12;
 
 /**
  * The current version of the serialized Key format.
+ *
+ * v2 persists per-protector Argon2 parameters and binds envelope metadata
+ * (version, threshold, providers, per-protector hashing identity) into the
+ * AES-GCM Additional Authenticated Data, preventing rollback or
+ * substitution of unauthenticated metadata. v1 envelopes are still
+ * accepted for read-back compatibility and are decrypted without AAD.
  */
 const KEY_VERSION = 2;
+
+/**
+ * Builds the AAD bound to a single protector. Reconstructed deterministically
+ * on decrypt; any deviation in version, threshold, or provider/hashing
+ * identity yields an authentication failure.
+ *
+ * The protector index is included so that ciphertexts cannot be swapped
+ * between positions without invalidating the auth tag — relevant only for
+ * sharing schemes that treat shares positionally.
+ */
+function buildKeyProtectorAAD(args: {
+  version: number;
+  threshold: number;
+  encryptionProvider: string;
+  sharingProvider: string;
+  hashingAlgorithm: string;
+  hashingParams: Record<string, unknown>;
+  index: number;
+}): Uint8Array {
+  return new TextEncoder().encode(
+    JSON.stringify({
+      v: args.version,
+      t: args.threshold,
+      e: args.encryptionProvider,
+      s: args.sharingProvider,
+      a: args.hashingAlgorithm,
+      h: args.hashingParams,
+      n: args.index,
+    }),
+  );
+}
 
 /**
  * Argon2id parameters used by version 1 of the Key format. Hard-coded so that
@@ -145,7 +182,16 @@ export class Key {
       const salt = randomness.generate(KEY_PROTECTOR_SALT_LENGTH);
       const iv = randomness.generate(KEY_PROTECTOR_IV_LENGTH);
       const passwordKey = await hashing.derive(passwords[i], salt, hashingParams);
-      const ciphertext = await encryption.encrypt(shares[i], passwordKey, iv);
+      const aad = buildKeyProtectorAAD({
+        version: KEY_VERSION,
+        threshold,
+        encryptionProvider: encryption.name,
+        sharingProvider: sharing.name,
+        hashingAlgorithm: hashing.name,
+        hashingParams,
+        index: i,
+      });
+      const ciphertext = await encryption.encrypt(shares[i], passwordKey, iv, aad);
 
       protectors.push({
         salt,
@@ -156,7 +202,7 @@ export class Key {
       });
     }
 
-    return new EncryptedKey(protectors, threshold, encryption.name, sharing.name);
+    return new EncryptedKey(protectors, threshold, encryption.name, sharing.name, KEY_VERSION);
   }
 }
 
@@ -166,17 +212,27 @@ export class Key {
  */
 export class EncryptedKey {
   /**
+   * The format version this EncryptedKey was created with. Drives the AAD
+   * binding decision on decrypt: v2+ uses AAD, v1 does not.
+   */
+  public readonly version: number;
+
+  /**
    * @param protectors - Metadata and encrypted material for each key share.
    * @param threshold - The number of shares required to reconstruct the key.
    * @param encryptionProvider - The name of the provider used to encrypt the shares.
    * @param sharingProvider - The name of the provider used to split the key material.
+   * @param version - Format version. Defaults to the current {@link KEY_VERSION}.
    */
   constructor(
     public readonly protectors: KeyProtector[],
     public readonly threshold: number,
     public readonly encryptionProvider: string,
     public readonly sharingProvider: string,
-  ) {}
+    version: number = KEY_VERSION,
+  ) {
+    this.version = version;
+  }
 
   /**
    * Decrypts (unlocks) the Key using the provided passwords.
@@ -197,7 +253,8 @@ export class EncryptedKey {
 
     // Attempt to unlock protectors using the provided passwords
     for (const password of passwords) {
-      for (const protector of this.protectors) {
+      for (let i = 0; i < this.protectors.length; i++) {
+        const protector = this.protectors[i];
         try {
           const hashing = HashingFactory.getProvider(protector.hashingAlgorithm);
           const passwordKey = await hashing.derive(
@@ -205,7 +262,24 @@ export class EncryptedKey {
             protector.salt,
             protector.hashingParams,
           );
-          const share = await encryption.decrypt(protector.ciphertext, passwordKey, protector.iv);
+          const aad =
+            this.version >= 2
+              ? buildKeyProtectorAAD({
+                  version: this.version,
+                  threshold: this.threshold,
+                  encryptionProvider: this.encryptionProvider,
+                  sharingProvider: this.sharingProvider,
+                  hashingAlgorithm: protector.hashingAlgorithm,
+                  hashingParams: protector.hashingParams,
+                  index: i,
+                })
+              : undefined;
+          const share = await encryption.decrypt(
+            protector.ciphertext,
+            passwordKey,
+            protector.iv,
+            aad,
+          );
           shares.push(share);
           break; // This password unlocked a share
         } catch {
@@ -231,7 +305,7 @@ export class EncryptedKey {
   encode(encodingProvider = 'base64'): string {
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data = {
-      v: KEY_VERSION,
+      v: this.version,
       t: this.threshold,
       e: this.encryptionProvider,
       s: this.sharingProvider,
@@ -270,6 +344,6 @@ export class EncryptedKey {
         hashingParams: p.h ?? { ...LEGACY_V1_HASHING_PARAMS },
       }),
     );
-    return new EncryptedKey(protectors, data.t, data.e, data.s);
+    return new EncryptedKey(protectors, data.t, data.e, data.s, data.v);
   }
 }

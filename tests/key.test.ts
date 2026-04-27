@@ -96,6 +96,35 @@ describe('Key', () => {
     expect(() => new Key(new Uint8Array(33))).toThrow(InvalidKeyError);
   });
 
+  it('should reject decryption when threshold is tampered with', async () => {
+    const { InsufficientSharesError } = await import('../src/errors');
+    const key = Key.generate();
+    const encryptedKey = await key.encrypt(['p1', 'p2', 'p3'], 2);
+
+    const json = JSON.parse(atob(encryptedKey.encode()));
+    json.t = 1; // Forge threshold downgrade.
+    const tampered = btoa(JSON.stringify(json));
+
+    const decoded = EncryptedKey.decode(tampered);
+    // Every protector now fails AAD check; no shares unlock; insufficient.
+    await expect(decoded.decrypt(['p1'])).rejects.toThrow(InsufficientSharesError);
+  });
+
+  it('should reject decryption when hashing params are downgraded', async () => {
+    const { InsufficientSharesError } = await import('../src/errors');
+    const key = Key.generate();
+    const encryptedKey = await key.encrypt(['p1'], 1);
+
+    const json = JSON.parse(atob(encryptedKey.encode()));
+    json.p[0].h = { iterations: 1, memorySize: 8, parallelism: 1, hashLength: 32 };
+    const tampered = btoa(JSON.stringify(json));
+
+    const decoded = EncryptedKey.decode(tampered);
+    // Even though the wrong params would still decrypt under v2, v3 binds
+    // them via AAD: tampered params yield an authentication failure.
+    await expect(decoded.decrypt(['p1'])).rejects.toThrow(InsufficientSharesError);
+  });
+
   it('should decode legacy v1 keys and decrypt them', async () => {
     // v1 keys did not persist hashing params; the decoder must fall back to the
     // frozen v1 defaults. We construct a v1 blob by hand here to lock in compat.
