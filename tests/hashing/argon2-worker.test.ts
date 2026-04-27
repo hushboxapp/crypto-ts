@@ -32,6 +32,40 @@ describe('Argon2WorkerProvider', () => {
     provider.terminate();
   });
 
+  it('should ignore messages from untrusted origins', { skip: typeof window === 'undefined' }, async () => {
+    const previousOnMessage = self.onmessage;
+    const previousPostMessage = self.postMessage;
+
+    await import('../../src/hashing/argon2.worker');
+    const handler = self.onmessage;
+    expect(typeof handler).toBe('function');
+
+    const posted: unknown[] = [];
+    self.postMessage = ((msg: unknown) => {
+      posted.push(msg);
+    }) as typeof self.postMessage;
+
+    try {
+      const event = new MessageEvent('message', {
+        data: {
+          id: 42,
+          password: 'attacker-password',
+          salt: new Uint8Array(16),
+          options: { iterations: 1, memorySize: 1024, parallelism: 1, hashLength: 32 },
+        },
+        origin: 'https://evil.example.com',
+      });
+
+      await handler!.call(self, event);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(posted).toHaveLength(0);
+    } finally {
+      self.postMessage = previousPostMessage;
+      self.onmessage = previousOnMessage;
+    }
+  });
+
   it('should handle worker errors', { skip: typeof window === 'undefined' }, async () => {
     // Mock worker that returns an error
     const mockWorker = {
