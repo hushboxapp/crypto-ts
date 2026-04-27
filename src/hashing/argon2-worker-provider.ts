@@ -59,8 +59,7 @@ export class Argon2WorkerProvider implements HashingProvider {
     private workerFactory: () => Worker,
     optionsOrArgon2: Argon2WorkerProviderOptions | Partial<Argon2Options> = {},
   ) {
-    const isWrapped =
-      'argon2' in optionsOrArgon2 || 'timeoutMs' in optionsOrArgon2;
+    const isWrapped = 'argon2' in optionsOrArgon2 || 'timeoutMs' in optionsOrArgon2;
     const wrapped: Argon2WorkerProviderOptions = isWrapped
       ? (optionsOrArgon2 as Argon2WorkerProviderOptions)
       : { argon2: optionsOrArgon2 as Partial<Argon2Options> };
