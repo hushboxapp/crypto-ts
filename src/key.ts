@@ -31,7 +31,18 @@ export const KEY_PROTECTOR_IV_LENGTH = 12;
 /**
  * The current version of the serialized Key format.
  */
-const KEY_VERSION = 1;
+const KEY_VERSION = 2;
+
+/**
+ * Argon2id parameters used by version 1 of the Key format. Hard-coded so that
+ * v1 keys can still be decrypted after the library defaults are tuned.
+ */
+const LEGACY_V1_HASHING_PARAMS: Record<string, unknown> = {
+  parallelism: 1,
+  iterations: 2,
+  memorySize: 65536,
+  hashLength: 32,
+};
 
 /**
  * Represents metadata about how a specific share of a Key is protected.
@@ -45,6 +56,11 @@ export interface KeyProtector {
   ciphertext: Uint8Array;
   /** The name of the hashing algorithm used to derive the encryption key from a password. */
   hashingAlgorithm: string;
+  /**
+   * The exact algorithm parameters that were active when this share was protected.
+   * Persisted so that decryption keeps working even if the library defaults change later.
+   */
+  hashingParams: Record<string, unknown>;
 }
 
 /**
@@ -124,10 +140,11 @@ export class Key {
 
     const protectors: KeyProtector[] = [];
 
+    const hashingParams = hashing.getParams();
     for (let i = 0; i < n; i++) {
       const salt = randomness.generate(KEY_PROTECTOR_SALT_LENGTH);
       const iv = randomness.generate(KEY_PROTECTOR_IV_LENGTH);
-      const passwordKey = await hashing.derive(passwords[i], salt);
+      const passwordKey = await hashing.derive(passwords[i], salt, hashingParams);
       const ciphertext = await encryption.encrypt(shares[i], passwordKey, iv);
 
       protectors.push({
@@ -135,6 +152,7 @@ export class Key {
         iv,
         ciphertext,
         hashingAlgorithm: hashing.name,
+        hashingParams: { ...hashingParams },
       });
     }
 
@@ -182,7 +200,11 @@ export class EncryptedKey {
       for (const protector of this.protectors) {
         try {
           const hashing = HashingFactory.getProvider(protector.hashingAlgorithm);
-          const passwordKey = await hashing.derive(password, protector.salt);
+          const passwordKey = await hashing.derive(
+            password,
+            protector.salt,
+            protector.hashingParams,
+          );
           const share = await encryption.decrypt(protector.ciphertext, passwordKey, protector.iv);
           shares.push(share);
           break; // This password unlocked a share
@@ -218,6 +240,7 @@ export class EncryptedKey {
         i: encoding.encode(p.iv),
         c: encoding.encode(p.ciphertext),
         a: p.hashingAlgorithm,
+        h: p.hashingParams,
       })),
     };
     return encoding.btoa(JSON.stringify(data));
@@ -234,16 +257,17 @@ export class EncryptedKey {
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data = JSON.parse(encoding.atob(encoded));
 
-    if (data.v !== KEY_VERSION) {
+    if (data.v !== KEY_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, KEY_VERSION);
     }
 
     const protectors: KeyProtector[] = data.p.map(
-      (p: { s: string; i: string; c: string; a: string }) => ({
+      (p: { s: string; i: string; c: string; a: string; h?: Record<string, unknown> }) => ({
         salt: encoding.decode(p.s),
         iv: encoding.decode(p.i),
         ciphertext: encoding.decode(p.c),
         hashingAlgorithm: p.a,
+        hashingParams: p.h ?? { ...LEGACY_V1_HASHING_PARAMS },
       }),
     );
     return new EncryptedKey(protectors, data.t, data.e, data.s);

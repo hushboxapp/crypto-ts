@@ -23,8 +23,8 @@ export interface Argon2Options {
  */
 export const DEFAULT_ARGON2_OPTIONS = {
   parallelism: 1,
-  iterations: 2,
-  memorySize: 65536, // 64 MB
+  iterations: 3,
+  memorySize: 65536, // 64 MiB
   hashLength: 32, // 256 bits
 };
 
@@ -74,10 +74,15 @@ export class Argon2Provider implements HashingProvider {
    * Derives a 256-bit key from a password.
    * @param password - The user-provided password (string or raw bytes).
    * @param salt - The cryptographic salt.
+   * @param params - Optional Argon2id parameters that override the provider defaults for this call.
    * @returns A promise resolving to the derived key.
    */
-  async derive(password: string | Uint8Array, salt: Uint8Array): Promise<Uint8Array> {
-    return await deriveKey(password, { ...this.options, salt });
+  async derive(
+    password: string | Uint8Array,
+    salt: Uint8Array,
+    params?: Record<string, unknown>,
+  ): Promise<Uint8Array> {
+    return await deriveKey(password, { ...this.options, ...params, salt });
   }
 
   /**
