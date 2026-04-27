@@ -125,51 +125,6 @@ describe('Key', () => {
     await expect(decoded.decrypt(['p1'])).rejects.toThrow(InsufficientSharesError);
   });
 
-  it('should decode legacy v2 keys (no AAD) and decrypt them', async () => {
-    // v2 keys persisted hashing params but did not bind anything via AAD.
-    // Construct a v2 blob by hand and verify v3 decoder still reads them.
-    const { Base64Engine } = await import('../src/encoding/base64');
-    const { AESGCMProvider } = await import('../src/encryption/aes-gcm');
-    const enc = new Base64Engine();
-    const aes = new AESGCMProvider();
-
-    const password = 'legacy-v2';
-    const salt = new Uint8Array(16).fill(1);
-    const iv = new Uint8Array(12).fill(2);
-    const material = new Uint8Array(32).fill(5);
-
-    const v2Provider = new Argon2Provider({
-      iterations: 1,
-      memorySize: 1024,
-      parallelism: 1,
-      hashLength: 32,
-    });
-    const passwordKey = await v2Provider.derive(password, salt);
-    const ciphertext = await aes.encrypt(material, passwordKey, iv); // no AAD
-
-    const v2Blob = {
-      v: 2,
-      t: 1,
-      e: 'aes-gcm',
-      s: 'shamir',
-      p: [
-        {
-          s: enc.encode(salt),
-          i: enc.encode(iv),
-          c: enc.encode(ciphertext),
-          a: 'argon2id',
-          h: { iterations: 1, memorySize: 1024, parallelism: 1, hashLength: 32 },
-        },
-      ],
-    };
-    const encoded = enc.btoa(JSON.stringify(v2Blob));
-
-    const decoded = EncryptedKey.decode(encoded);
-    expect(decoded.version).toBe(2);
-    const decrypted = await decoded.decrypt([password]);
-    expect(decrypted.material).toEqual(material);
-  });
-
   it('should decode legacy v1 keys and decrypt them', async () => {
     // v1 keys did not persist hashing params; the decoder must fall back to the
     // frozen v1 defaults. We construct a v1 blob by hand here to lock in compat.

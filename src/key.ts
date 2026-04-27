@@ -31,13 +31,13 @@ export const KEY_PROTECTOR_IV_LENGTH = 12;
 /**
  * The current version of the serialized Key format.
  *
- * v3 binds envelope metadata (version, threshold, providers) and the
- * per-protector hashing identity into the AES-GCM Additional Authenticated
- * Data, preventing rollback or substitution of unauthenticated metadata.
- * v1 and v2 envelopes are still accepted for read-back compatibility, but
- * are decrypted without AAD.
+ * v2 persists per-protector Argon2 parameters and binds envelope metadata
+ * (version, threshold, providers, per-protector hashing identity) into the
+ * AES-GCM Additional Authenticated Data, preventing rollback or
+ * substitution of unauthenticated metadata. v1 envelopes are still
+ * accepted for read-back compatibility and are decrypted without AAD.
  */
-const KEY_VERSION = 3;
+const KEY_VERSION = 2;
 
 /**
  * Builds the AAD bound to a single protector. Reconstructed deterministically
@@ -213,7 +213,7 @@ export class Key {
 export class EncryptedKey {
   /**
    * The format version this EncryptedKey was created with. Drives the AAD
-   * binding decision on decrypt: v3+ uses AAD, v1/v2 do not.
+   * binding decision on decrypt: v2+ uses AAD, v1 does not.
    */
   public readonly version: number;
 
@@ -263,7 +263,7 @@ export class EncryptedKey {
             protector.hashingParams,
           );
           const aad =
-            this.version >= 3
+            this.version >= 2
               ? buildKeyProtectorAAD({
                   version: this.version,
                   threshold: this.threshold,
@@ -331,7 +331,7 @@ export class EncryptedKey {
     const encoding = EncodingFactory.getProvider(encodingProvider);
     const data = JSON.parse(encoding.atob(encoded));
 
-    if (data.v !== KEY_VERSION && data.v !== 2 && data.v !== 1) {
+    if (data.v !== KEY_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, KEY_VERSION);
     }
 
