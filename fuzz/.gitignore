@@ -1,0 +1,8 @@
+dist/
+corpus/*/*
+!corpus/*/.gitkeep
+crash-*
+leak-*
+oom-*
+timeout-*
+slow-unit-*

@@ -114,8 +114,10 @@ export class Key {
     const hashing = HashingFactory.getProvider(options.hashingProvider || 'argon2id');
 
     let shares: Uint8Array[];
-    if (n === 1) {
-      shares = [this.material];
+    if (n === 1 || threshold === 1) {
+      // Threshold of 1: every protector holds a copy of the material. No
+      // secret sharing needed — any single password reconstructs the key.
+      shares = Array.from({ length: n }, () => new Uint8Array(this.material));
     } else {
       shares = await sharing.split(this.material, n, threshold);
     }

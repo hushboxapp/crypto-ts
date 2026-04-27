@@ -23,7 +23,11 @@
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx}'",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "fuzz:build": "tsc -p fuzz/tsconfig.json",
+    "fuzz:base64": "npm run fuzz:build && jazzer fuzz/dist/fuzz/base64.fuzz fuzz/corpus/base64 --sync",
+    "fuzz:aes-gcm": "npm run fuzz:build && jazzer fuzz/dist/fuzz/aes-gcm.fuzz fuzz/corpus/aes-gcm",
+    "fuzz:shamir": "npm run fuzz:build && jazzer fuzz/dist/fuzz/shamir.fuzz fuzz/corpus/shamir"
   },
   "repository": {
     "type": "git",
@@ -48,6 +52,7 @@
   "homepage": "https://github.com/hushboxapp/crypto-ts#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@jazzer.js/core": "^4.0.0",
     "@types/node": "^25.3.3",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
