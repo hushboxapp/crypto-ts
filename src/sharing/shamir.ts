@@ -18,17 +18,17 @@ export class ShamirProvider implements SharingProvider {
    * @param t - Minimum shares required for reconstruction.
    * @returns A promise resolving to the generated shares.
    * @throws {EmptyDataError} If the secret is empty.
-   * @throws {InvalidShareCountError} If N is less than 1.
-   * @throws {InvalidThresholdError} If T is less than 1 or greater than N.
+   * @throws {InvalidShareCountError} If N is less than 2 or greater than 255.
+   * @throws {InvalidThresholdError} If T is less than 2 or greater than N.
    */
   async split(secret: Uint8Array, n: number, t: number): Promise<Uint8Array[]> {
     if (secret.length === 0) {
       throw new EmptyDataError('Secret material cannot be empty.');
     }
-    if (n < 1) {
+    if (!Number.isInteger(n) || n < 2 || n > 255) {
       throw new InvalidShareCountError();
     }
-    if (t > n || t < 1) {
+    if (!Number.isInteger(t) || t < 2 || t > n) {
       throw new InvalidThresholdError();
     }
     return await split(secret, n, t);

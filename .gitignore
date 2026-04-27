@@ -143,3 +143,10 @@ vite.config.ts.timestamp-*
 
 # Vitest browser screenshots
 **/__screenshots__
+
+# Jazzer.js fuzzing artifacts
+crash-*
+leak-*
+oom-*
+timeout-*
+slow-unit-*

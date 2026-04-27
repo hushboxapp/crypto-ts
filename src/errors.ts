@@ -23,7 +23,7 @@ export class DecryptionError extends CryptoError {
  */
 export class InvalidThresholdError extends CryptoError {
   constructor(
-    message = 'Invalid threshold: must be between 1 and the number of shares/passwords.',
+    message = 'Invalid threshold: must be an integer between 2 and the number of shares/passwords.',
   ) {
     super(message);
   }
@@ -33,7 +33,7 @@ export class InvalidThresholdError extends CryptoError {
  * Thrown when an invalid number of shares is requested.
  */
 export class InvalidShareCountError extends CryptoError {
-  constructor(message = 'Invalid share count: must be at least 1.') {
+  constructor(message = 'Invalid share count: must be an integer between 2 and 255.') {
     super(message);
   }
 }
