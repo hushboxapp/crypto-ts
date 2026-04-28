@@ -3,6 +3,7 @@
 [![Build & Tests](https://github.com/hushboxapp/crypto-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/hushboxapp/crypto-ts/actions/workflows/ci.yml)
 [![NPM Version](https://img.shields.io/npm/v/@hushboxapp/crypto.svg)](https://www.npmjs.com/package/@hushboxapp/crypto)
 [![Release Status](https://github.com/hushboxapp/crypto-ts/actions/workflows/release-please.yml/badge.svg)](https://github.com/hushboxapp/crypto-ts/actions/workflows/release-please.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hushboxapp/crypto-ts/badge)](https://scorecard.dev/viewer/?uri=github.com/hushboxapp/crypto-ts)
 
 A browser-compatible TypeScript library for advanced cryptographic operations.
 
