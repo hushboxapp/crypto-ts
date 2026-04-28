@@ -62,3 +62,24 @@ const unlockedKey = await restoredKey.decrypt(['p4ssw0rd1', 'another-pass']);
 const decryptedData = await restoredDoc.decrypt(unlockedKey);
 console.log(new TextDecoder().decode(decryptedData)); // "Hello, Hushbox!"
 ```
+
+## Security Notes
+
+### Threshold Semantics
+
+`Key.encrypt(passwords, threshold)` uses Shamir's Secret Sharing only when `threshold >= 2`. Two cases worth understanding:
+
+- **`threshold === 1`**: every protector independently holds a copy of the key material (encrypted under its password). Any single password unlocks the key. Use this when you want **redundant** access (e.g., a primary password plus a recovery phrase), not increased security. Adding more passwords does not raise the bar — it widens the attack surface, since cracking the weakest password is sufficient.
+- **`threshold >= 2`**: the master key is split into `n = passwords.length` Shamir shares; any `threshold` shares reconstruct it. Fewer than `threshold` correct passwords reveal nothing about the key.
+
+### Argon2id Parameters
+
+The default Argon2id provider ships with `t=3, m=64 MiB, p=1` (RFC 9106 / OWASP 2024 first-recommended profile). These parameters are persisted per protector in the encrypted blob and bound into the AAD, so tampering with them on a serialized envelope causes decryption to fail authentication.
+
+### Envelope Authentication
+
+`EncryptedKey` (v2) and `Document` (v2) bind their format version, algorithm names, and (for `EncryptedKey`) hashing parameters into AES-GCM Additional Authenticated Data. An attacker who modifies any of these fields on a stored envelope produces a tag mismatch on decrypt rather than a silent re-interpretation. Legacy v1 blobs without AAD are still readable for backward compatibility.
+
+### Provider Allowlists
+
+`EncryptedKey.decode` and `Document.decode` accept only the providers shipped by this library by default. Pass an explicit `allowed` / `allowedAlgorithms` option to widen the list when registering custom providers. This defends against confused-deputy attacks where a hostile module registers a provider under a known name and a tampered envelope redirects decryption to it.

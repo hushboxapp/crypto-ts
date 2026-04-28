@@ -33,23 +33,13 @@ export class AESGCMProvider implements EncryptionProvider {
    * @throws {CryptoApiUnavailableError} If Web Crypto is not supported.
    */
   private getSubtleCrypto(): SubtleCrypto {
-    if (
-      typeof globalThis !== 'undefined' &&
-      'isSecureContext' in globalThis &&
-      !globalThis.isSecureContext
-    ) {
+    if (globalThis.isSecureContext === false) {
       throw new SecureContextError();
     }
-
-    if (typeof window !== 'undefined' && window.crypto) {
-      return window.crypto.subtle;
+    if (!globalThis.crypto?.subtle) {
+      throw new CryptoApiUnavailableError();
     }
-    // @ts-ignore
-    if (typeof globalThis !== 'undefined' && globalThis.crypto) {
-      // @ts-ignore
-      return globalThis.crypto.subtle;
-    }
-    throw new CryptoApiUnavailableError();
+    return globalThis.crypto.subtle;
   }
 
   /**
