@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { Key, EncryptedKey } from '../src/index';
 import { HashingFactory } from '../src/hashing/hashing';
 import { Argon2Provider } from '../src/hashing/argon2';
@@ -262,5 +262,23 @@ describe('Key', () => {
     const key = Key.generate();
     const encryptedKey = await key.encrypt(['p1'], 1);
     await expect(encryptedKey.decrypt([])).rejects.toThrow(EmptyPasswordsError);
+  });
+
+  it('should not re-derive against already-unlocked protectors', async () => {
+    // The decrypt loop tracks unlocked protector indices so each protector is
+    // probed at most once per decrypt call. For 3-of-3 the previous behavior
+    // was 1+2+3 = 6 derivations; with tracking it should be exactly 3.
+    const provider = HashingFactory.getProvider('argon2id');
+    const key = Key.generate();
+    const encryptedKey = await key.encrypt(['pA', 'pB', 'pC'], 3);
+
+    const spy = vi.spyOn(provider, 'derive');
+    try {
+      const restored = await encryptedKey.decrypt(['pA', 'pB', 'pC']);
+      expect(restored.material).toEqual(key.material);
+      expect(spy).toHaveBeenCalledTimes(3);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

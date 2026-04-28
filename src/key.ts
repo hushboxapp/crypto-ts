@@ -300,10 +300,16 @@ export class EncryptedKey {
     const shares: Uint8Array[] = [];
     const encryption = EncryptionFactory.getProvider(this.encryptionProvider);
     const sharing = SharingFactory.getProvider(this.sharingProvider);
+    // Protector indices already unlocked by some earlier password. Skipping
+    // them cuts the inner-loop Argon2 fan-out from O(passwords × protectors)
+    // toward O(passwords) on the happy path: every protector is derived
+    // against at most once after the password that owns it has run.
+    const unlocked = new Set<number>();
 
     // Attempt to unlock protectors using the provided passwords
     for (const password of passwords) {
       for (let i = 0; i < this.protectors.length; i++) {
+        if (unlocked.has(i)) continue;
         const protector = this.protectors[i];
         let passwordKey: Uint8Array | undefined;
         try {
@@ -328,6 +334,7 @@ export class EncryptedKey {
             aad,
           );
           shares.push(share);
+          unlocked.add(i);
           break; // This password unlocked a share
         } catch {
           continue; // Try next protector
