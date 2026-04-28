@@ -1,14 +1,25 @@
-import { split, combine } from 'shamir-secret-sharing';
 import { SharingProvider, SharingFactory } from './sharing';
+import { RandomnessFactory } from '../randomness/randomness';
+import '../randomness/native';
 import { InvalidThresholdError, InvalidShareCountError, EmptyDataError } from '../errors';
+import { splitSecret, combineShares } from './shamir-core';
 
 /**
  * An implementation of SharingProvider using Shamir's Secret Sharing scheme.
- * It uses polynomial interpolation to allow secret reconstruction from a subset of shares.
+ * It uses polynomial interpolation over GF(2^8) to allow secret reconstruction
+ * from a subset of shares. The core math lives in {@link ./shamir-core}; this
+ * class adds typed argument validation and routes randomness through the
+ * caller-configured {@link RandomnessFactory}.
  */
 export class ShamirProvider implements SharingProvider {
   /** The unique identifier for this provider. */
   readonly name = 'shamir';
+
+  /**
+   * @param randomnessProvider - Name of the randomness provider used to draw
+   * polynomial coefficients and x-coordinate orderings. Defaults to 'native'.
+   */
+  constructor(private readonly randomnessProvider: string = 'native') {}
 
   /**
    * Splits a secret into N shares with a threshold of T.
@@ -31,7 +42,8 @@ export class ShamirProvider implements SharingProvider {
     if (!Number.isInteger(t) || t < 2 || t > n) {
       throw new InvalidThresholdError();
     }
-    return await split(secret, n, t);
+    const randomness = RandomnessFactory.getProvider(this.randomnessProvider);
+    return splitSecret(secret, n, t, (count) => randomness.generate(count));
   }
 
   /**
@@ -40,7 +52,7 @@ export class ShamirProvider implements SharingProvider {
    * @returns A promise resolving to the combined secret.
    */
   async combine(shares: Uint8Array[]): Promise<Uint8Array> {
-    return await combine(shares);
+    return combineShares(shares);
   }
 }
 
