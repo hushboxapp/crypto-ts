@@ -1,8 +1,20 @@
 import { EncodingProvider, EncodingFactory } from './encoding';
 
 /**
+ * Chunk size used when converting Uint8Array to a binary string before
+ * encoding. {@link String.fromCharCode} accepts a variadic argument list and
+ * blows the stack on very large inputs; processing the buffer in fixed-size
+ * chunks keeps encode at O(n) time and constant stack depth.
+ */
+const ENCODE_CHUNK_SIZE = 0x8000;
+
+/**
  * An implementation of EncodingProvider using the Base64 scheme.
- * Provides environment-aware transformation between strings and Base64.
+ *
+ * Uses the platform-native {@link globalThis.atob} / {@link globalThis.btoa}
+ * (available in browsers and Node 16+) so no environment branching is needed.
+ * Binary encode/decode use a chunked latin-1 bridge to avoid the O(n^2)
+ * blow-up of `Array.from(data).map(...).join('')` on large payloads.
  */
 export class Base64Engine implements EncodingProvider {
   /** The unique identifier for this provider. */
@@ -14,8 +26,7 @@ export class Base64Engine implements EncodingProvider {
    * @returns The Base64 encoded string.
    */
   btoa(str: string): string {
-    if (typeof window !== 'undefined' && window.btoa) return window.btoa(str);
-    return Buffer.from(str, 'binary').toString('base64');
+    return globalThis.btoa(str);
   }
 
   /**
@@ -24,8 +35,7 @@ export class Base64Engine implements EncodingProvider {
    * @returns The decoded original string.
    */
   atob(b64: string): string {
-    if (typeof window !== 'undefined' && window.atob) return window.atob(b64);
-    return Buffer.from(b64, 'base64').toString('binary');
+    return globalThis.atob(b64);
   }
 
   /**
@@ -34,14 +44,12 @@ export class Base64Engine implements EncodingProvider {
    * @returns The Base64 encoded string.
    */
   encode(data: Uint8Array): string {
-    if (typeof window !== 'undefined' && window.btoa) {
-      // In browser, handle it via string conversion to avoid Buffer
-      const binary = Array.from(data)
-        .map((b) => String.fromCharCode(b))
-        .join('');
-      return window.btoa(binary);
+    let binary = '';
+    for (let i = 0; i < data.length; i += ENCODE_CHUNK_SIZE) {
+      const chunk = data.subarray(i, i + ENCODE_CHUNK_SIZE);
+      binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
     }
-    return Buffer.from(data).toString('base64');
+    return globalThis.btoa(binary);
   }
 
   /**
@@ -50,15 +58,12 @@ export class Base64Engine implements EncodingProvider {
    * @returns The decoded bytes as a Uint8Array.
    */
   decode(b64: string): Uint8Array {
-    if (typeof window !== 'undefined' && window.atob) {
-      const binary = window.atob(b64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return bytes;
+    const binary = globalThis.atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
     }
-    return new Uint8Array(Buffer.from(b64, 'base64'));
+    return bytes;
   }
 }
 
