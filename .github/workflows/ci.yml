@@ -60,6 +60,7 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
+      - run: npm ci
       - name: Run Audit
         id: audit
         run: |
