@@ -47,6 +47,15 @@ describe('Base64Engine', () => {
     expect(engine.decode('')).toEqual(data);
   });
 
+  it('should throw InvalidEncodingError for non-base64 input', async () => {
+    const { InvalidEncodingError } = await import('../../src/errors');
+    // 0xa8 is outside the base64 alphabet; native atob throws DOMException.
+    // We wrap it as InvalidEncodingError so callers see a library-domain error.
+    const garbage = String.fromCharCode(0x3b, 0xa8);
+    expect(() => engine.atob(garbage)).toThrow(InvalidEncodingError);
+    expect(() => engine.decode(garbage)).toThrow(InvalidEncodingError);
+  });
+
   it('should handle data larger than the encode chunk size', () => {
     // Exceeds the internal 0x8000-byte chunk window so the chunked encode path
     // is exercised. Uses a deterministic byte ramp to avoid pulling randomness

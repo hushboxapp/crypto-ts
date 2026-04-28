@@ -183,3 +183,18 @@ export class KeyDisposedError extends CryptoError {
     super(message);
   }
 }
+
+/**
+ * Thrown when an encoding provider is given input it cannot decode (e.g.,
+ * non-Base64 characters fed to {@link Base64Engine.decode}). Wraps host
+ * runtime exceptions (DOMException, etc.) so callers only need to catch
+ * library-domain errors.
+ */
+export class InvalidEncodingError extends CryptoError {
+  constructor(encoding: string, cause?: unknown) {
+    super(`Input is not a valid ${encoding} string.`);
+    if (cause !== undefined) {
+      (this as { cause?: unknown }).cause = cause;
+    }
+  }
+}

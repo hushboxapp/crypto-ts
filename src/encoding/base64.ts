@@ -1,4 +1,5 @@
 import { EncodingProvider, EncodingFactory } from './encoding';
+import { InvalidEncodingError } from '../errors';
 
 /**
  * Chunk size used when converting Uint8Array to a binary string before
@@ -33,9 +34,16 @@ export class Base64Engine implements EncodingProvider {
    * Decodes a Base64 encoded string.
    * @param b64 - The Base64 string.
    * @returns The decoded original string.
+   * @throws {InvalidEncodingError} If the input is not a valid Base64 string.
    */
   atob(b64: string): string {
-    return globalThis.atob(b64);
+    try {
+      return globalThis.atob(b64);
+    } catch (err) {
+      // Native atob throws DOMException ('InvalidCharacterError'). Wrap it so
+      // callers only ever see library-domain errors.
+      throw new InvalidEncodingError('base64', err);
+    }
   }
 
   /**
@@ -56,9 +64,10 @@ export class Base64Engine implements EncodingProvider {
    * Decodes a Base64 encoded string into binary data (Uint8Array).
    * @param b64 - The Base64 string.
    * @returns The decoded bytes as a Uint8Array.
+   * @throws {InvalidEncodingError} If the input is not a valid Base64 string.
    */
   decode(b64: string): Uint8Array {
-    const binary = globalThis.atob(b64);
+    const binary = this.atob(b64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
