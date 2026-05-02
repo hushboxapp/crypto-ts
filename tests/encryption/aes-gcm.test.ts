@@ -54,6 +54,19 @@ describe('AESGCMProvider', () => {
     await expect(provider.decrypt(data, key, iv)).rejects.toThrow(EmptyKeyError);
   });
 
+  it('should throw InvalidKeyError for incorrect key length', async () => {
+    const { InvalidKeyError } = await import('../../src/errors');
+    const iv = randomness.generate(12);
+    const data = new TextEncoder().encode('Hello');
+
+    const badLengths = [16, 24, 31, 33, 64];
+    for (const len of badLengths) {
+      const badKey = randomness.generate(len);
+      await expect(provider.encrypt(data, badKey, iv)).rejects.toThrow(InvalidKeyError);
+      await expect(provider.decrypt(data, badKey, iv)).rejects.toThrow(InvalidKeyError);
+    }
+  });
+
   it('should throw EmptyIVError for empty IV', async () => {
     const { EmptyIVError } = await import('../../src/errors');
     const key = randomness.generate(32);
