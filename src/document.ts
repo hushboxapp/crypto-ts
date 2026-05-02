@@ -5,6 +5,7 @@ import { RandomnessFactory } from './randomness/randomness';
 import {
   DisallowedProviderError,
   EmptyDataError,
+  InvalidFormatError,
   KeyDisposedError,
   UnsupportedVersionError,
 } from './errors';
@@ -174,9 +175,13 @@ export class Document {
     const allowed = opts.allowedAlgorithms ?? DEFAULT_ALLOWED_DOCUMENT_ALGORITHMS;
 
     const encoding = EncodingFactory.getProvider(encodingProvider);
-    const data: { v: number; c: string; m: { i: string; a: string } } = JSON.parse(
-      encoding.atob(encoded),
-    );
+    const raw = encoding.atob(encoded);
+    let data: { v: number; c: string; m: { i: string; a: string } };
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      throw new InvalidFormatError(e);
+    }
 
     if (data.v !== DOCUMENT_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, DOCUMENT_VERSION);

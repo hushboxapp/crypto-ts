@@ -7,6 +7,7 @@ import {
   UnsupportedVersionError,
   DisallowedProviderError,
   KeyDisposedError,
+  InvalidFormatError,
 } from './errors';
 import { SharingFactory } from './sharing/sharing';
 import { EncryptionFactory } from './encryption/encryption';
@@ -417,7 +418,19 @@ export class EncryptedKey {
     const allowedHashing = opts.allowed?.hashing ?? DEFAULT_ALLOWED_KEY_PROVIDERS.hashing;
 
     const encoding = EncodingFactory.getProvider(encodingProvider);
-    const data = JSON.parse(encoding.atob(encoded));
+    const raw = encoding.atob(encoded);
+    let data: {
+      v: number;
+      t: number;
+      e: string;
+      s: string;
+      p: Array<{ s: string; i: string; c: string; a: string; h?: Record<string, unknown> }>;
+    };
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      throw new InvalidFormatError(e);
+    }
 
     if (data.v !== KEY_VERSION && data.v !== 1) {
       throw new UnsupportedVersionError(data.v, KEY_VERSION);

@@ -153,4 +153,10 @@ describe('Document', () => {
     const encoded = btoa(JSON.stringify(data));
     expect(() => Document.decode(encoded)).toThrow(UnsupportedVersionError);
   });
+
+  it('should throw InvalidFormatError for valid base64 but invalid JSON in decode', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const encoded = btoa('not json');
+    expect(() => Document.decode(encoded)).toThrow(InvalidFormatError);
+  });
 });

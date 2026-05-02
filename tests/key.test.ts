@@ -181,6 +181,12 @@ describe('Key', () => {
     expect(() => EncryptedKey.decode(encoded)).toThrow(UnsupportedVersionError);
   });
 
+  it('should throw InvalidFormatError for valid base64 but invalid JSON in decode', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const encoded = btoa('not json');
+    expect(() => EncryptedKey.decode(encoded)).toThrow(InvalidFormatError);
+  });
+
   it('should throw EmptyPasswordsError for empty passwords in encrypt', async () => {
     const { EmptyPasswordsError } = await import('../src/errors');
     const key = Key.generate();
