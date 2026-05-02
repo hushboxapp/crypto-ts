@@ -144,6 +144,9 @@ vite.config.ts.timestamp-*
 # Vitest browser screenshots
 **/__screenshots__
 
+# Vitest attachments (runtime artifacts)
+.vitest-attachments
+
 # Jazzer.js fuzzing artifacts
 crash-*
 leak-*
