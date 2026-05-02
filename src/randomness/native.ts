@@ -27,10 +27,11 @@ export class NativeProvider implements RandomnessProvider {
     }
 
     const bytes = new Uint8Array(length);
-    if (typeof globalThis.crypto?.getRandomValues !== 'function') {
+    const crypto = globalThis.crypto;
+    if (!crypto || typeof crypto.getRandomValues !== 'function') {
       throw new CryptoApiUnavailableError();
     }
-    globalThis.crypto.getRandomValues(bytes);
+    crypto.getRandomValues(bytes);
     return bytes;
   }
 }

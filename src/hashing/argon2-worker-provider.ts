@@ -11,7 +11,7 @@ export const DEFAULT_WORKER_TIMEOUT_MS = 60_000;
 interface PendingRequest {
   resolve: (value: Uint8Array) => void;
   reject: (reason: Error) => void;
-  timeoutHandle: ReturnType<typeof setTimeout>;
+  timeoutHandle: ReturnType<typeof setTimeout> | null;
 }
 
 /**
@@ -104,7 +104,7 @@ export class Argon2WorkerProvider implements HashingProvider {
                 reject(new WorkerTimeoutError(this.timeoutMs));
               }
             }, this.timeoutMs)
-          : (undefined as unknown as ReturnType<typeof setTimeout>);
+          : null;
 
       this.pendingRequests.set(id, { resolve, reject, timeoutHandle });
       this.worker.postMessage({
@@ -133,7 +133,7 @@ export class Argon2WorkerProvider implements HashingProvider {
     if (!request) return;
 
     this.pendingRequests.delete(id);
-    if (request.timeoutHandle !== undefined) clearTimeout(request.timeoutHandle);
+    if (request.timeoutHandle !== null) clearTimeout(request.timeoutHandle);
 
     if (error) {
       request.reject(new Error(error));
@@ -165,7 +165,7 @@ export class Argon2WorkerProvider implements HashingProvider {
 
   private rejectAllPending(reason: Error): void {
     for (const [id, request] of this.pendingRequests) {
-      if (request.timeoutHandle !== undefined) clearTimeout(request.timeoutHandle);
+if (request.timeoutHandle !== null) clearTimeout(request.timeoutHandle);
       request.reject(reason);
       this.pendingRequests.delete(id);
     }
