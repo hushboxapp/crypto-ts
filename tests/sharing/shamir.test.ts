@@ -22,6 +22,14 @@ describe('ShamirProvider', () => {
     expect(reconstructedMore).toEqual(secret);
   });
 
+  it('should split and combine with threshold of 1', async () => {
+    const secret = new TextEncoder().encode('threshold-1 secret');
+    const shares = await provider.split(secret, 3, 1);
+    expect(shares.length).toBe(3);
+    const reconstructed = await provider.combine([shares[0]]);
+    expect(reconstructed).toEqual(secret);
+  });
+
   it('should fail to recombine with less than threshold', async () => {
     const secret = new TextEncoder().encode('Super secret password');
     const n = 5;

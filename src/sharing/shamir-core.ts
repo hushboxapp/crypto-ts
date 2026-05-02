@@ -186,8 +186,8 @@ export function splitSecret(
  * @throws If two shares share an x-coordinate, or if shares disagree on length.
  */
 export function combineShares(shares: Uint8Array[]): Uint8Array {
-  if (shares.length < 2) {
-    throw new Error('shamir: need at least 2 shares to combine');
+  if (shares.length < 1) {
+    throw new Error('shamir: need at least 1 share to combine');
   }
   const shareLength = shares[0]!.byteLength;
   if (shareLength < 2) {
