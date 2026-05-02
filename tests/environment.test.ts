@@ -42,7 +42,13 @@ describe('Environment-dependent branches', () => {
   });
 
   it('NativeProvider should throw CryptoApiUnavailableError when getRandomValues is missing', () => {
-    const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    const originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    const originalIsSecureContextDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'isSecureContext');
+    Object.defineProperty(globalThis, 'isSecureContext', {
+      value: true,
+      configurable: true,
+      writable: true,
+    });
     Object.defineProperty(globalThis, 'crypto', {
       value: {},
       configurable: true,
@@ -52,8 +58,14 @@ describe('Environment-dependent branches', () => {
     const provider = new NativeProvider();
     expect(() => provider.generate(16)).toThrow(CryptoApiUnavailableError);
 
-    if (originalDescriptor) {
-      Object.defineProperty(globalThis, 'crypto', originalDescriptor);
+    if (originalCryptoDescriptor) {
+      Object.defineProperty(globalThis, 'crypto', originalCryptoDescriptor);
+    }
+    if (originalIsSecureContextDescriptor) {
+      Object.defineProperty(globalThis, 'isSecureContext', originalIsSecureContextDescriptor);
+    } else {
+      // @ts-expect-error
+      delete globalThis.isSecureContext;
     }
   });
 
