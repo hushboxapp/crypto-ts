@@ -154,6 +154,8 @@ export class Argon2WorkerProvider implements HashingProvider {
         : 'Worker terminated unexpectedly.';
     this.fatalError = new WorkerError(message);
     this.rejectAllPending(this.fatalError);
+    this.worker.onerror = null;
+    this.worker.onmessageerror = null;
     try {
       this.worker.terminate();
     } catch {
