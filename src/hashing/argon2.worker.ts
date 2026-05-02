@@ -19,7 +19,10 @@ self.onmessage = async (e: MessageEvent) => {
       outputType: 'binary',
     });
     const resultData = result as Uint8Array;
-    (self as { postMessage(msg: unknown, transfer: Transferable[]): void }).postMessage({ id, result: resultData }, [resultData.buffer as ArrayBuffer]);
+    (self as { postMessage(msg: unknown, transfer: Transferable[]): void }).postMessage(
+      { id, result: resultData },
+      [resultData.buffer as ArrayBuffer],
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     self.postMessage({ id, error: message });

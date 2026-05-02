@@ -165,7 +165,7 @@ export class Argon2WorkerProvider implements HashingProvider {
 
   private rejectAllPending(reason: Error): void {
     for (const [id, request] of this.pendingRequests) {
-if (request.timeoutHandle !== null) clearTimeout(request.timeoutHandle);
+      if (request.timeoutHandle !== null) clearTimeout(request.timeoutHandle);
       request.reject(reason);
       this.pendingRequests.delete(id);
     }
