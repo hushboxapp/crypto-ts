@@ -198,3 +198,17 @@ export class InvalidEncodingError extends CryptoError {
     }
   }
 }
+
+/**
+ * Thrown when decode input was successfully decoded from its encoding but
+ * the resulting payload is not valid JSON (e.g., a Base64 string that decodes
+ * to arbitrary text rather than a serialised envelope).
+ */
+export class InvalidFormatError extends CryptoError {
+  constructor(cause?: unknown) {
+    super('Encoded data is not valid JSON.');
+    if (cause !== undefined) {
+      (this as { cause?: unknown }).cause = cause;
+    }
+  }
+}
