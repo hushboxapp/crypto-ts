@@ -205,8 +205,8 @@ export class InvalidEncodingError extends CryptoError {
  * to arbitrary text rather than a serialised envelope).
  */
 export class InvalidFormatError extends CryptoError {
-  constructor(cause?: unknown) {
-    super('Encoded data is not valid JSON.');
+  constructor(message?: string, cause?: unknown) {
+    super(message ?? 'Encoded data is not valid JSON.');
     if (cause !== undefined) {
       (this as { cause?: unknown }).cause = cause;
     }

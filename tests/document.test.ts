@@ -159,4 +159,29 @@ describe('Document', () => {
     const encoded = btoa('not json');
     expect(() => Document.decode(encoded)).toThrow(InvalidFormatError);
   });
+
+  it('should throw InvalidFormatError when envelope is not an object', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    expect(() => Document.decode(btoa('null'))).toThrow(InvalidFormatError);
+    expect(() => Document.decode(btoa('[]'))).toThrow(InvalidFormatError);
+    expect(() => Document.decode(btoa('"string"'))).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when required fields are missing', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const missingC = btoa(JSON.stringify({ v: 2, m: { i: 'aXY=', a: 'aes-gcm' } }));
+    const missingM = btoa(JSON.stringify({ v: 2, c: 'Y2lw' }));
+    const missingMA = btoa(JSON.stringify({ v: 2, c: 'Y2lw', m: { i: 'aXY=' } }));
+    expect(() => Document.decode(missingC)).toThrow(InvalidFormatError);
+    expect(() => Document.decode(missingM)).toThrow(InvalidFormatError);
+    expect(() => Document.decode(missingMA)).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when metadata is not an object', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const badM = btoa(JSON.stringify({ v: 2, c: 'Y2lw', m: 'not-an-object' }));
+    const nullM = btoa(JSON.stringify({ v: 2, c: 'Y2lw', m: null }));
+    expect(() => Document.decode(badM)).toThrow(InvalidFormatError);
+    expect(() => Document.decode(nullM)).toThrow(InvalidFormatError);
+  });
 });

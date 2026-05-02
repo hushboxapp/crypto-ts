@@ -175,7 +175,7 @@ describe('Key', () => {
       t: 1,
       e: 'aes-gcm',
       s: 'shamir',
-      p: [],
+      p: [{ s: 'c2FsdA==', i: 'aXY=', c: 'Y2lw', a: 'argon2id' }],
     };
     const encoded = btoa(JSON.stringify(data));
     expect(() => EncryptedKey.decode(encoded)).toThrow(UnsupportedVersionError);
@@ -185,6 +185,54 @@ describe('Key', () => {
     const { InvalidFormatError } = await import('../src/errors');
     const encoded = btoa('not json');
     expect(() => EncryptedKey.decode(encoded)).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when envelope is not an object', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    expect(() => EncryptedKey.decode(btoa('null'))).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(btoa('[]'))).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(btoa('"string"'))).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(btoa('42'))).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when required fields are missing', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const missingS = btoa(JSON.stringify({ v: 2, t: 1, e: 'aes-gcm', p: [] }));
+    const missingP = btoa(JSON.stringify({ v: 2, t: 1, e: 'aes-gcm', s: 'shamir' }));
+    const missingE = btoa(JSON.stringify({ v: 2, t: 1, s: 'shamir', p: [] }));
+    expect(() => EncryptedKey.decode(missingS)).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(missingP)).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(missingE)).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when fields have wrong types', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const badV = btoa(JSON.stringify({ v: '2', t: 1, e: 'aes-gcm', s: 'shamir', p: [{ s: 'c2FsdA==', i: 'aXY=', c: 'Y2lw', a: 'argon2id' }] }));
+    const badT = btoa(JSON.stringify({ v: 2, t: 'one', e: 'aes-gcm', s: 'shamir', p: [{ s: 'c2FsdA==', i: 'aXY=', c: 'Y2lw', a: 'argon2id' }] }));
+    expect(() => EncryptedKey.decode(badV)).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(badT)).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when threshold is zero or negative', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const zeroT = btoa(JSON.stringify({ v: 2, t: 0, e: 'aes-gcm', s: 'shamir', p: [{ s: 'c2FsdA==', i: 'aXY=', c: 'Y2lw', a: 'argon2id' }] }));
+    const negT = btoa(JSON.stringify({ v: 2, t: -1, e: 'aes-gcm', s: 'shamir', p: [{ s: 'c2FsdA==', i: 'aXY=', c: 'Y2lw', a: 'argon2id' }] }));
+    expect(() => EncryptedKey.decode(zeroT)).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(negT)).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when protectors array is empty', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const encoded = btoa(JSON.stringify({ v: 2, t: 1, e: 'aes-gcm', s: 'shamir', p: [] }));
+    expect(() => EncryptedKey.decode(encoded)).toThrow(InvalidFormatError);
+  });
+
+  it('should throw InvalidFormatError when protector entry is malformed', async () => {
+    const { InvalidFormatError } = await import('../src/errors');
+    const missingA = btoa(JSON.stringify({ v: 2, t: 1, e: 'aes-gcm', s: 'shamir', p: [{ s: 'c2FsdA==', i: 'aXY=', c: 'Y2lw', h: {} }] }));
+    const nullP = btoa(JSON.stringify({ v: 2, t: 1, e: 'aes-gcm', s: 'shamir', p: [null] }));
+    expect(() => EncryptedKey.decode(missingA)).toThrow(InvalidFormatError);
+    expect(() => EncryptedKey.decode(nullP)).toThrow(InvalidFormatError);
   });
 
   it('should throw EmptyPasswordsError for empty passwords in encrypt', async () => {
