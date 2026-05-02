@@ -40,7 +40,9 @@ export class ShamirProvider implements SharingProvider {
       throw new InvalidShareCountError();
     }
     if (!Number.isInteger(t) || t < 2 || t > n) {
-      throw new InvalidThresholdError();
+      throw new InvalidThresholdError(
+        'Invalid threshold: must be an integer between 2 and the number of shares.',
+      );
     }
     const randomness = RandomnessFactory.getProvider(this.randomnessProvider);
     return splitSecret(secret, n, t, (count) => randomness.generate(count));
