@@ -1,5 +1,5 @@
 import { RandomnessProvider, RandomnessFactory } from './randomness';
-import { SecureContextError } from '../errors';
+import { CryptoApiUnavailableError, SecureContextError } from '../errors';
 
 /**
  * An implementation of RandomnessProvider using the environment's native CSPRNG.
@@ -15,6 +15,7 @@ export class NativeProvider implements RandomnessProvider {
    * @param length - The number of bytes to generate.
    * @returns A Uint8Array of random bytes.
    * @throws {SecureContextError} If the environment is an insecure browser context.
+   * @throws {CryptoApiUnavailableError} If crypto.getRandomValues is not available.
    */
   generate(length: number): Uint8Array {
     if (
@@ -26,12 +27,10 @@ export class NativeProvider implements RandomnessProvider {
     }
 
     const bytes = new Uint8Array(length);
-    if (typeof window !== 'undefined' && window.crypto) {
-      window.crypto.getRandomValues(bytes);
-    } else {
-      // @ts-ignore
-      globalThis.crypto.getRandomValues(bytes);
+    if (typeof globalThis.crypto?.getRandomValues !== 'function') {
+      throw new CryptoApiUnavailableError();
     }
+    globalThis.crypto.getRandomValues(bytes);
     return bytes;
   }
 }
