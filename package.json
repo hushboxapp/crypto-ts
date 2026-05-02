@@ -1,6 +1,6 @@
 {
   "name": "@hushboxapp/crypto",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A browser-compatible TypeScript library for document encryption with multi-password support.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

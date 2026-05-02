@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.1](https://github.com/hushboxapp/crypto-ts/compare/v1.1.0...v1.1.1) (2026-05-02)
+
+
+### Bug Fixes
+
+* allow Shamir threshold of 1, relaxing validation and combine lower bound ([#31](https://github.com/hushboxapp/crypto-ts/issues/31)) ([4263900](https://github.com/hushboxapp/crypto-ts/commit/42639002a94abd9fd90a3e40fb482858cb7bab29))
+* check for getRandomValues availability in NativeProvider ([#26](https://github.com/hushboxapp/crypto-ts/issues/26)) ([81bdf20](https://github.com/hushboxapp/crypto-ts/commit/81bdf2085b6234b6c16ef4706f630d1edb5eba55))
+* correct misleading InvalidThresholdError default message for Key context ([#25](https://github.com/hushboxapp/crypto-ts/issues/25)) ([4bcbfe2](https://github.com/hushboxapp/crypto-ts/commit/4bcbfe27e7a5a44213878f82f534d656d5d71baf))
+* **examples:** use template literals for multiline strings in node-cli ([#22](https://github.com/hushboxapp/crypto-ts/issues/22)) ([1d6e773](https://github.com/hushboxapp/crypto-ts/commit/1d6e773c92746b783a2acfa09e9e64b71f25911b))
+* null worker handlers before terminate in handleFatal to prevent re-entry ([#27](https://github.com/hushboxapp/crypto-ts/issues/27)) ([0e98eed](https://github.com/hushboxapp/crypto-ts/commit/0e98eedc664e3a44c0277f9db4bb3579418f2f20))
+* remove [@ts-ignore](https://github.com/ts-ignore) and type hacks with proper type assertions ([#29](https://github.com/hushboxapp/crypto-ts/issues/29)) ([a6a9600](https://github.com/hushboxapp/crypto-ts/commit/a6a96003c66971192f3e723e28d9af32bbf58a44))
+* validate AES-256 key length in AESGCMProvider ([#30](https://github.com/hushboxapp/crypto-ts/issues/30)) ([65669e6](https://github.com/hushboxapp/crypto-ts/commit/65669e635bf92a129f9a6ef8f2403f6c9271c223))
+* validate JSON structure in EncryptedKey.decode and Document.decode ([#28](https://github.com/hushboxapp/crypto-ts/issues/28)) ([eea7679](https://github.com/hushboxapp/crypto-ts/commit/eea7679992485d197d2ad28ec9ae64529ec816bb))
+* wrap JSON.parse errors in InvalidFormatError within decode methods ([#24](https://github.com/hushboxapp/crypto-ts/issues/24)) ([1c3c1f1](https://github.com/hushboxapp/crypto-ts/commit/1c3c1f1abf236431543ad4d7abdf10f6f7b20b38))
+
 ## [1.1.0](https://github.com/hushboxapp/crypto-ts/compare/v1.0.1...v1.1.0) (2026-04-28)
 
 
