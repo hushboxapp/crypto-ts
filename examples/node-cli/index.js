@@ -20,12 +20,12 @@ program.command('encrypt')
       const data = new TextEncoder().encode(text);
       const encryptedDoc = await Document.encrypt(data, masterKey);
       
-      console.log('
---- ENCRYPTED OUTPUT ---');
+      console.log(`
+--- ENCRYPTED OUTPUT ---`);
       console.log('KEY:', encryptedKey.encode());
       console.log('DOC:', encryptedDoc.encode());
-      console.log('------------------------
-');
+      console.log(`------------------------
+`);
     } catch (error) {
       console.error('Encryption failed:', error.message);
     }
@@ -44,11 +44,11 @@ program.command('decrypt')
       const unlockedKey = await restoredKey.decrypt([options.password]);
       const decryptedData = await restoredDoc.decrypt(unlockedKey);
       
-      console.log('
---- DECRYPTED TEXT ---');
+      console.log(`
+--- DECRYPTED TEXT ---`);
       console.log(new TextDecoder().decode(decryptedData));
-      console.log('----------------------
-');
+      console.log(`----------------------
+`);
     } catch (error) {
       console.error('Decryption failed:', error.message);
     }
