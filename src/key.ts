@@ -429,7 +429,53 @@ export class EncryptedKey {
     try {
       data = JSON.parse(raw);
     } catch (e) {
-      throw new InvalidFormatError(e);
+      throw new InvalidFormatError(undefined, e);
+    }
+
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new InvalidFormatError('Envelope must be a JSON object.');
+    }
+    if (typeof data.v !== 'number') {
+      throw new InvalidFormatError(`Field 'v' must be a number, got ${typeof data.v}.`);
+    }
+    if (typeof data.t !== 'number') {
+      throw new InvalidFormatError(`Field 't' must be a number, got ${typeof data.t}.`);
+    }
+    if (!Number.isInteger(data.t) || data.t < 1) {
+      throw new InvalidFormatError(`Field 't' must be a positive integer, got ${data.t}.`);
+    }
+    if (typeof data.e !== 'string') {
+      throw new InvalidFormatError(`Field 'e' must be a string, got ${typeof data.e}.`);
+    }
+    if (typeof data.s !== 'string') {
+      throw new InvalidFormatError(`Field 's' must be a string, got ${typeof data.s}.`);
+    }
+    if (!Array.isArray(data.p)) {
+      throw new InvalidFormatError(`Field 'p' must be an array, got ${typeof data.p}.`);
+    }
+    if (data.p.length === 0) {
+      throw new InvalidFormatError("Field 'p' must contain at least one protector.");
+    }
+    for (let i = 0; i < data.p.length; i++) {
+      const p = data.p[i];
+      if (typeof p !== 'object' || p === null) {
+        throw new InvalidFormatError(`Protector[${i}] must be an object.`);
+      }
+      if (typeof p.s !== 'string') {
+        throw new InvalidFormatError(`Missing or invalid field 's' in protector[${i}].`);
+      }
+      if (typeof p.i !== 'string') {
+        throw new InvalidFormatError(`Missing or invalid field 'i' in protector[${i}].`);
+      }
+      if (typeof p.c !== 'string') {
+        throw new InvalidFormatError(`Missing or invalid field 'c' in protector[${i}].`);
+      }
+      if (typeof p.a !== 'string') {
+        throw new InvalidFormatError(`Missing or invalid field 'a' in protector[${i}].`);
+      }
+      if (p.h !== undefined && (typeof p.h !== 'object' || p.h === null || Array.isArray(p.h))) {
+        throw new InvalidFormatError(`Field 'h' in protector[${i}] must be an object if present.`);
+      }
     }
 
     if (data.v !== KEY_VERSION && data.v !== 1) {

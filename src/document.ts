@@ -180,7 +180,26 @@ export class Document {
     try {
       data = JSON.parse(raw);
     } catch (e) {
-      throw new InvalidFormatError(e);
+      throw new InvalidFormatError(undefined, e);
+    }
+
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new InvalidFormatError('Envelope must be a JSON object.');
+    }
+    if (typeof data.v !== 'number') {
+      throw new InvalidFormatError(`Field 'v' must be a number, got ${typeof data.v}.`);
+    }
+    if (typeof data.c !== 'string') {
+      throw new InvalidFormatError(`Field 'c' must be a string, got ${typeof data.c}.`);
+    }
+    if (typeof data.m !== 'object' || data.m === null || Array.isArray(data.m)) {
+      throw new InvalidFormatError("Field 'm' must be an object.");
+    }
+    if (typeof data.m.i !== 'string') {
+      throw new InvalidFormatError(`Missing or invalid field 'i' in metadata.`);
+    }
+    if (typeof data.m.a !== 'string') {
+      throw new InvalidFormatError(`Missing or invalid field 'a' in metadata.`);
     }
 
     if (data.v !== DOCUMENT_VERSION && data.v !== 1) {
