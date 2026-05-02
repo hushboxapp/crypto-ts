@@ -30,7 +30,7 @@ export class ShamirProvider implements SharingProvider {
    * @returns A promise resolving to the generated shares.
    * @throws {EmptyDataError} If the secret is empty.
    * @throws {InvalidShareCountError} If N is less than 2 or greater than 255.
-   * @throws {InvalidThresholdError} If T is less than 2 or greater than N.
+   * @throws {InvalidThresholdError} If T is less than 1 or greater than N.
    */
   async split(secret: Uint8Array, n: number, t: number): Promise<Uint8Array[]> {
     if (secret.length === 0) {
@@ -39,9 +39,9 @@ export class ShamirProvider implements SharingProvider {
     if (!Number.isInteger(n) || n < 2 || n > 255) {
       throw new InvalidShareCountError();
     }
-    if (!Number.isInteger(t) || t < 2 || t > n) {
+    if (!Number.isInteger(t) || t < 1 || t > n) {
       throw new InvalidThresholdError(
-        'Invalid threshold: must be an integer between 2 and the number of shares.',
+        'Invalid threshold: must be an integer between 1 and the number of shares.',
       );
     }
     const randomness = RandomnessFactory.getProvider(this.randomnessProvider);

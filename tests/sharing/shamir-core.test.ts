@@ -57,6 +57,20 @@ describe('shamir-core', () => {
     expect(bogus).not.toEqual(secret);
   });
 
+  it('round-trips a secret with threshold-1 (degree-0 polynomial)', () => {
+    const secret = crypto.getRandomValues(new Uint8Array(32));
+    const shares = splitSecret(secret, 3, 1, randomBytes);
+    expect(shares.length).toBe(3);
+    // Every share is just the secret itself with an x-coordinate appended.
+    for (let i = 0; i < shares.length; i++) {
+      expect(shares[i].length).toBe(33);
+      expect(shares[i].slice(0, -1)).toEqual(secret);
+    }
+    // A single share reconstructs the secret.
+    const reconstructed = combineShares([shares[0]]);
+    expect(reconstructed).toEqual(secret);
+  });
+
   it('rejects duplicate x-coordinates on combine', () => {
     const secret = new TextEncoder().encode('payload');
     const shares = splitSecret(secret, 4, 2, randomBytes);
@@ -72,10 +86,8 @@ describe('shamir-core', () => {
     expect(() => combineShares([shares[0], truncated])).toThrow(/same byte length/);
   });
 
-  it('rejects fewer than 2 shares on combine', () => {
-    const secret = new TextEncoder().encode('payload');
-    const shares = splitSecret(secret, 3, 2, randomBytes);
-    expect(() => combineShares([shares[0]])).toThrow(/at least 2 shares/);
+  it('rejects fewer than 1 share on combine', () => {
+    expect(() => combineShares([])).toThrow(/at least 1 share/);
   });
 
   it('produces deterministic output for a fixed RNG', () => {
