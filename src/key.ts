@@ -298,16 +298,36 @@ export class EncryptedKey {
     if (passwords.length === 0) {
       throw new EmptyPasswordsError();
     }
+
+    const shares = await this.collectShares(passwords);
+
+    if (shares.length < this.threshold) {
+      for (const s of shares) s.fill(0);
+      throw new InsufficientSharesError(shares.length, this.threshold);
+    }
+
+    const sharing = SharingFactory.getProvider(this.sharingProvider);
+    const material =
+      this.threshold === 1 ? new Uint8Array(shares[0]) : await sharing.combine(shares);
+    for (const s of shares) s.fill(0);
+    return new Key(material);
+  }
+
+  /**
+   * Attempts to unlock protectors using the provided passwords, collecting
+   * decrypted shares until the threshold is met or passwords are exhausted.
+   *
+   * Each protector is probed at most once: the inner loop skips indices
+   * already unlocked by an earlier password, keeping the Argon2 fan-out near
+   * O(passwords) on the happy path.
+   *
+   * @returns The collected share buffers. May be fewer than the threshold.
+   */
+  private async collectShares(passwords: string[]): Promise<Uint8Array[]> {
     const shares: Uint8Array[] = [];
     const encryption = EncryptionFactory.getProvider(this.encryptionProvider);
-    const sharing = SharingFactory.getProvider(this.sharingProvider);
-    // Protector indices already unlocked by some earlier password. Skipping
-    // them cuts the inner-loop Argon2 fan-out from O(passwords × protectors)
-    // toward O(passwords) on the happy path: every protector is derived
-    // against at most once after the password that owns it has run.
     const unlocked = new Set<number>();
 
-    // Attempt to unlock protectors using the provided passwords
     for (const password of passwords) {
       for (let i = 0; i < this.protectors.length; i++) {
         if (unlocked.has(i)) continue;
@@ -336,28 +356,17 @@ export class EncryptedKey {
           );
           shares.push(share);
           unlocked.add(i);
-          break; // This password unlocked a share
+          if (shares.length >= this.threshold) return shares;
+          break;
         } catch {
-          continue; // Try next protector
+          continue;
         } finally {
           if (passwordKey) passwordKey.fill(0);
         }
       }
-      if (shares.length >= this.threshold) break;
     }
 
-    if (shares.length < this.threshold) {
-      // Best-effort wipe of partial shares before propagating the error.
-      for (const s of shares) s.fill(0);
-      throw new InsufficientSharesError(shares.length, this.threshold);
-    }
-
-    const material =
-      this.threshold === 1 ? new Uint8Array(shares[0]) : await sharing.combine(shares);
-    // Threshold-1 path returns the share buffer itself; clone first, then zero
-    // every share so only the new Key holds reconstructed material.
-    for (const s of shares) s.fill(0);
-    return new Key(material);
+    return shares;
   }
 
   /**
