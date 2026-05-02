@@ -41,6 +41,34 @@ describe('Environment-dependent branches', () => {
     });
   });
 
+  it('NativeProvider should throw CryptoApiUnavailableError when getRandomValues is missing', () => {
+    const originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    const originalIsSecureContextDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'isSecureContext');
+    Object.defineProperty(globalThis, 'isSecureContext', {
+      value: true,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(globalThis, 'crypto', {
+      value: {},
+      configurable: true,
+      writable: true,
+    });
+
+    const provider = new NativeProvider();
+    expect(() => provider.generate(16)).toThrow(CryptoApiUnavailableError);
+
+    if (originalCryptoDescriptor) {
+      Object.defineProperty(globalThis, 'crypto', originalCryptoDescriptor);
+    }
+    if (originalIsSecureContextDescriptor) {
+      Object.defineProperty(globalThis, 'isSecureContext', originalIsSecureContextDescriptor);
+    } else {
+      // @ts-expect-error
+      delete globalThis.isSecureContext;
+    }
+  });
+
   it('AESGCMProvider should throw CryptoApiUnavailableError when crypto is missing', async () => {
     // Mock the private getSubtleCrypto method
     const spy = vi.spyOn(AESGCMProvider.prototype as any, 'getSubtleCrypto')
