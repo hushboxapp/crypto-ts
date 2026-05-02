@@ -5,6 +5,7 @@ import {
   CryptoApiUnavailableError,
   EmptyKeyError,
   EmptyIVError,
+  InvalidKeyError,
 } from '../errors';
 
 /**
@@ -59,6 +60,7 @@ export class AESGCMProvider implements EncryptionProvider {
     aad?: Uint8Array,
   ): Promise<Uint8Array> {
     if (key.length === 0) throw new EmptyKeyError();
+    if (key.length !== AES_GCM_KEY_LENGTH) throw new InvalidKeyError();
     if (iv.length === 0) throw new EmptyIVError();
 
     const crypto = this.getSubtleCrypto();
@@ -92,6 +94,7 @@ export class AESGCMProvider implements EncryptionProvider {
     aad?: Uint8Array,
   ): Promise<Uint8Array> {
     if (key.length === 0) throw new EmptyKeyError();
+    if (key.length !== AES_GCM_KEY_LENGTH) throw new InvalidKeyError();
     if (iv.length === 0) throw new EmptyIVError();
 
     const crypto = this.getSubtleCrypto();

@@ -20,25 +20,8 @@ describe('AESGCMProvider - NIST Test Vectors', () => {
   const provider = new AESGCMProvider();
 
   // Vectors from NIST SP 800-38D, Appendix B / McGrew & Viega test cases.
+  // Only AES-256 vectors are included since this library mandates 256-bit keys.
   const testVectors = [
-    // AES-128
-    {
-      name: 'NIST AES-128 Case 1: Empty Plaintext',
-      key: '00000000000000000000000000000000',
-      iv: '000000000000000000000000',
-      plaintext: '',
-      aad: '',
-      ciphertext: '58e2fccefa7e3061367f1d57a4e7455a',
-    },
-    {
-      name: 'NIST AES-128 Case 2: 128-bit Plaintext',
-      key: '00000000000000000000000000000000',
-      iv: '000000000000000000000000',
-      plaintext: '00000000000000000000000000000000',
-      aad: '',
-      ciphertext: '0388dace60b6a392f328c2b971b2fe78ab6e47d42cec13bdf53a67b21257bddf',
-    },
-    // AES-256
     {
       name: 'NIST AES-256 TC13: Empty Plaintext (GMAC mode)',
       key: '0000000000000000000000000000000000000000000000000000000000000000',
