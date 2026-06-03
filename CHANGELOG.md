@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/hushboxapp/crypto-ts/compare/v1.1.1...v1.1.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* **deps:** tmp & brace-expansion vulnerabilities ([#44](https://github.com/hushboxapp/crypto-ts/issues/44)) ([9555c61](https://github.com/hushboxapp/crypto-ts/commit/9555c61bcdea14312442bd90b83ca45a6cf4cf22))
+
 ## [1.1.1](https://github.com/hushboxapp/crypto-ts/compare/v1.1.0...v1.1.1) (2026-05-02)
 
 
