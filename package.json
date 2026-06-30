@@ -57,7 +57,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@jazzer.js/core": "^4.0.0",
-    "@types/node": "^25.3.3",
+    "@types/node": "^26.0.1",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@vitest/browser": "^4.0.18",
