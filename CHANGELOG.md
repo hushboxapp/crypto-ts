@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.3](https://github.com/hushboxapp/crypto-ts/compare/v1.1.2...v1.1.3) (2026-11-22)
+
+
+### Bug Fixes
+
+* bump hash-wasm from 4.12.0 to 4.13.0 ([#82](https://github.com/hushboxapp/crypto-ts/issues/82)) ([72b9bfa](https://github.com/hushboxapp/crypto-ts/commit/72b9bfa818dd40ad4563af8c8cdcc56e14c183e6))
+* integrate Coveralls and enforce 90% test coverage ([#86](https://github.com/hushboxapp/crypto-ts/issues/86)) ([56e536d](https://github.com/hushboxapp/crypto-ts/commit/56e536dbe05dc9dc485ff6ae34c12cb1c4331784))
+* migrate library from TypeScript 6.0.3 to 7.0.2 ([#63](https://github.com/hushboxapp/crypto-ts/issues/63)) ([e7e8d26](https://github.com/hushboxapp/crypto-ts/commit/e7e8d26a37ae852a70ff5c5783dee7a23be969db))
+
 ## [1.1.2](https://github.com/hushboxapp/crypto-ts/compare/v1.1.1...v1.1.2) (2026-06-03)
 
 
