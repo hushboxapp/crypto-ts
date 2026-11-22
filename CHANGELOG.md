@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/hushboxapp/crypto-ts/compare/v1.1.3...v1.1.4) (2026-11-22)
+
+
+### Bug Fixes
+
+* use npm staged publishing with OIDC ([#87](https://github.com/hushboxapp/crypto-ts/issues/87)) ([b1f0551](https://github.com/hushboxapp/crypto-ts/commit/b1f0551e88209f26f4abb747afde1b086e8bef22))
+
 ## [1.1.3](https://github.com/hushboxapp/crypto-ts/compare/v1.1.2...v1.1.3) (2026-11-22)
 
 
