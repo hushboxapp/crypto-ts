@@ -13,6 +13,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "isolatedDeclarations": true,
     "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*"],

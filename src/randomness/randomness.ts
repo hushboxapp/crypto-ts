@@ -16,4 +16,6 @@ export interface RandomnessProvider extends NamedProvider {
 /**
  * Global factory for managing randomness providers.
  */
-export const RandomnessFactory = new Factory<RandomnessProvider>('Randomness');
+export const RandomnessFactory: Factory<RandomnessProvider> = new Factory<RandomnessProvider>(
+  'Randomness',
+);

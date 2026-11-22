@@ -32,4 +32,4 @@ export interface HashingProvider extends NamedProvider {
 /**
  * Global factory for managing hashing (KDF) providers.
  */
-export const HashingFactory = new Factory<HashingProvider>('Hashing');
+export const HashingFactory: Factory<HashingProvider> = new Factory<HashingProvider>('Hashing');

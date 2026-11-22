@@ -10,7 +10,7 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (Check `.nvmrc` for the recommended version)
+- [Node.js](https://nodejs.org/) 24 for development and builds (use `.nvmrc`)
 - [npm](https://www.npmjs.com/)
 
 ### Setup
@@ -31,8 +31,18 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 
 ## Development Workflow
 
+TypeScript 7 handles type checking and fuzz compilation. Oxlint checks code
+quality, and Prettier checks formatting separately. The Oxlint rules were
+migrated from the previous ESLint configuration; strict TypeScript module
+checking covers the omitted duplicate-parameter and legacy-octal checks.
+
+tsdown uses Oxc to generate bundled declarations with `isolatedDeclarations`.
+Exported APIs must have the explicit types required by that compiler option.
+The library and worker are built independently in ESM and CommonJS formats.
+CI builds on Node 24 and checks the installed package on Node 20, 22, and 24.
+
 1.  **Create a Branch**: Use a descriptive name like `feat/multi-key-support` or `fix/argon2-worker-path`.
-2.  **Make Your Changes**: Adhere to the existing coding style (enforced by ESLint and Prettier).
+2.  **Make Your Changes**: Adhere to the existing coding style (checked by Oxlint and Prettier).
 3.  **Conventional Commits**: We use [Conventional Commits](https://www.conventionalcommits.org/) to automate our versioning and changelog generation. Your commit messages should follow this format:
     - `feat: ...` for new features.
     - `fix: ...` for bug fixes.
@@ -45,13 +55,21 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 5.  **Lint & Type-Check**:
     ```bash
     npm run lint
+    npm run format:check
     npm run type-check
     ```
 6.  **Verify Coverage**:
     ```bash
     npm run test:node -- --coverage
     ```
-7.  **Submit a Pull Request**: Provide a clear description of the changes and link any related issues.
+7.  **Verify the Package**: Build and test an installed tarball, including ESM/CommonJS
+    imports, worker modules, and strict declaration consumers. The check uses a
+    temporary directory and may access the npm registry to install dependencies.
+    ```bash
+    npm run build
+    npm run test:package
+    ```
+8.  **Submit a Pull Request**: Provide a clear description of the changes and link any related issues.
 
 ## Release Process
 
