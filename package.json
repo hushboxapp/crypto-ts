@@ -61,7 +61,7 @@
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "@vitest/browser": "^4.1.12",
-    "@vitest/browser-playwright": "^5.1.1",
+    "@vitest/browser-playwright": "^4.1.12",
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
