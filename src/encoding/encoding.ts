@@ -37,4 +37,4 @@ export interface EncodingProvider extends NamedProvider {
 /**
  * Global factory for managing encoding providers.
  */
-export const EncodingFactory = new Factory<EncodingProvider>('Encoding');
+export const EncodingFactory: Factory<EncodingProvider> = new Factory<EncodingProvider>('Encoding');

@@ -28,4 +28,4 @@ export interface SharingProvider extends NamedProvider {
 /**
  * Global factory for managing secret sharing providers.
  */
-export const SharingFactory = new Factory<SharingProvider>('Sharing');
+export const SharingFactory: Factory<SharingProvider> = new Factory<SharingProvider>('Sharing');

@@ -20,18 +20,20 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "test": "vitest run",
     "test:node": "vitest run --browser.enabled=false",
-    "dev": "tsup --watch",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
-    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
+    "dev": "tsdown --watch",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint src --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx}'",
     "type-check": "tsc --noEmit",
     "fuzz:build": "tsc -p fuzz/tsconfig.json",
     "fuzz:base64": "npm run fuzz:build && jazzer fuzz/dist/fuzz/base64.fuzz fuzz/corpus/base64 --sync",
     "fuzz:aes-gcm": "npm run fuzz:build && jazzer fuzz/dist/fuzz/aes-gcm.fuzz fuzz/corpus/aes-gcm",
-    "fuzz:shamir": "npm run fuzz:build && jazzer fuzz/dist/fuzz/shamir.fuzz fuzz/corpus/shamir"
+    "fuzz:shamir": "npm run fuzz:build && jazzer fuzz/dist/fuzz/shamir.fuzz fuzz/corpus/shamir",
+    "format:check": "prettier --check 'src/**/*.{ts,tsx}'",
+    "test:package": "node scripts/check-package.mjs"
   },
   "repository": {
     "type": "git",
@@ -55,22 +57,16 @@
   },
   "homepage": "https://github.com/hushboxapp/crypto-ts#readme",
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@jazzer.js/core": "^4.0.0",
     "@types/node": "^26.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.56.1",
-    "@typescript-eslint/parser": "^8.56.1",
     "@vitest/browser": "^4.1.12",
     "@vitest/browser-playwright": "^4.1.12",
     "@vitest/coverage-v8": "^4.1.12",
-    "eslint": "^10.0.2",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
+    "oxlint": "^1.94.0",
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.23.7",
     "typescript": "^7.0.2",
-    "typescript-eslint": "^8.56.1",
     "vitest": "^4.1.12"
   },
   "dependencies": {
