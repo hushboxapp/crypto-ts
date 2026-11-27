@@ -40,4 +40,6 @@ export interface EncryptionProvider extends NamedProvider {
 /**
  * Global factory for managing encryption providers.
  */
-export const EncryptionFactory = new Factory<EncryptionProvider>('Encryption');
+export const EncryptionFactory: Factory<EncryptionProvider> = new Factory<EncryptionProvider>(
+  'Encryption',
+);

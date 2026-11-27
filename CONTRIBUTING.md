@@ -10,7 +10,7 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (Check `.nvmrc` for the recommended version)
+- [Node.js](https://nodejs.org/) 24 for development and builds (use `.nvmrc`)
 - [npm](https://www.npmjs.com/)
 
 ### Setup
@@ -31,8 +31,18 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 
 ## Development Workflow
 
+TypeScript 7 handles type checking and fuzz compilation. Oxlint checks code
+quality, and Prettier checks formatting separately. The Oxlint rules were
+migrated from the previous ESLint configuration; strict TypeScript module
+checking covers the omitted duplicate-parameter and legacy-octal checks.
+
+tsdown uses Oxc to generate bundled declarations with `isolatedDeclarations`.
+Exported APIs must have the explicit types required by that compiler option.
+The library and worker are built independently in ESM and CommonJS formats.
+CI builds on Node 24 and checks the installed package on Node 20, 22, and 24.
+
 1.  **Create a Branch**: Use a descriptive name like `feat/multi-key-support` or `fix/argon2-worker-path`.
-2.  **Make Your Changes**: Adhere to the existing coding style (enforced by ESLint and Prettier).
+2.  **Make Your Changes**: Adhere to the existing coding style (checked by Oxlint and Prettier).
 3.  **Conventional Commits**: We use [Conventional Commits](https://www.conventionalcommits.org/) to automate our versioning and changelog generation. Your commit messages should follow this format:
     - `feat: ...` for new features.
     - `fix: ...` for bug fixes.
@@ -45,24 +55,33 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 5.  **Lint & Type-Check**:
     ```bash
     npm run lint
+    npm run format:check
     npm run type-check
     ```
 6.  **Verify Coverage**:
     ```bash
     npm run test:node -- --coverage
     ```
-7.  **Submit a Pull Request**: Provide a clear description of the changes and link any related issues.
+7.  **Verify the Package**: Build and test an installed tarball, including ESM/CommonJS
+    imports, worker modules, and strict declaration consumers. The check uses a
+    temporary directory and may access the npm registry to install dependencies.
+    ```bash
+    npm run build
+    npm run test:package
+    ```
+8.  **Submit a Pull Request**: Provide a clear description of the changes and link any related issues.
 
 ## Release Process
 
-We use [Release Please](https://github.com/googleapis/release-please) to manage our releases. The process is automated as follows:
+We use [Release Please](https://github.com/googleapis/release-please) to manage our releases. The process works as follows:
 
 1.  **Release PR**: When you merge changes into the `main` branch, Release Please will automatically create or update a "Release PR". This PR includes:
     - A version bump in `package.json`.
     - An updated `CHANGELOG.md` based on your Conventional Commits.
 2.  **Merging the Release PR**: When a maintainer merges the Release PR:
     - A new GitHub Release is created and tagged.
-    - A GitHub Action is triggered to build the library and publish it to [npm](https://www.npmjs.com/package/@hushboxapp/crypto).
+    - A GitHub Action is triggered to build the library and stage it on [npm](https://www.npmjs.com/package/@hushboxapp/crypto) with `npm stage publish`.
+3.  **Approving the npm Release**: A maintainer reviews the staged package in npm's Staged Packages tab and approves it with 2FA, or runs `npm stage approve <stage-id>`. The package version becomes publicly available after approval. See [npm's staged publishing documentation](https://docs.npmjs.com/staged-publishing/) for details.
 
 ## Style Guidelines
 
