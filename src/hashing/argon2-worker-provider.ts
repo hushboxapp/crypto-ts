@@ -175,7 +175,7 @@ export class Argon2WorkerProvider implements HashingProvider {
    * Terminates the background worker thread and rejects any in-flight requests.
    * After calling this, the provider can no longer be used.
    */
-  terminate() {
+  terminate(): void {
     this.terminated = true;
     this.rejectAllPending(new WorkerTerminatedError());
     this.worker.terminate();
