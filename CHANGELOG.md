@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.5](https://github.com/hushboxapp/crypto-ts/compare/v1.1.4...v1.1.5) (2026-11-27)
+
+
+### Bug Fixes
+
+* bump @vitest/browser from 4.1.12 to 5.1.1 ([#90](https://github.com/hushboxapp/crypto-ts/issues/90)) ([d5ca9e4](https://github.com/hushboxapp/crypto-ts/commit/d5ca9e4d5ff4deaee8647e7d376eed4447999594))
+* bump @vitest/browser-playwright from 4.1.12 to 5.1.1 ([#91](https://github.com/hushboxapp/crypto-ts/issues/91)) ([9f8ab05](https://github.com/hushboxapp/crypto-ts/commit/9f8ab05e3168ea0a605a9bf2a018c6d0d23b19f7))
+* bump @vitest/coverage-v8 from 4.1.12 to 5.1.1 ([#92](https://github.com/hushboxapp/crypto-ts/issues/92)) ([e96f17d](https://github.com/hushboxapp/crypto-ts/commit/e96f17d37f7f0351c0c2b7ddeb2e0d575775172a))
+* bump the codeql group with 3 updates ([#89](https://github.com/hushboxapp/crypto-ts/issues/89)) ([9b700eb](https://github.com/hushboxapp/crypto-ts/commit/9b700eb5395f420b3443d57ee10941098f6c267a))
+
 ## [1.1.4](https://github.com/hushboxapp/crypto-ts/compare/v1.1.3...v1.1.4) (2026-11-22)
 
 
